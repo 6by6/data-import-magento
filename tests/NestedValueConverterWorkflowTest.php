@@ -1,6 +1,6 @@
 <?php
 
-namespace Ddeboer\DataImport\Tests;
+namespace SixBySix\Port\Tests;
 
 use Port\Reader\ArrayReader;
 use SixBySix\Port\NestedValueConverterWorkflow;
