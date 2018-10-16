@@ -2,6 +2,9 @@
     <a href="https://packagist.org/packages/sixbysix/port-magento" title="Latest Version on Packagist" target="_blank">
         <img src="https://img.shields.io/packagist/v/sixbysix/port-magento.svg?longCache=true&amp;style=for-the-badge">
     </a>
+    <a href="https://travis-ci.org/6by6/port-magento" title="Build status" target="_blank">
+        <img src="https://img.shields.io/travis/6by6/port-magento.svg?longCache=true&amp;style=for-the-badge">
+    </a>
     <a href="https://github.com/sixbysix/port-magento/blob/develop/LICENSE.md" title="Software License" target="_blank">
         <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg?longCache=true&amp;style=for-the-badge">
     </a>

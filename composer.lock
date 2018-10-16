@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "afb8b9c92333d0172960fc069da70fb7",
+    "content-hash": "9451264f88ac83e0d551176da7afac38",
     "packages": [
         {
             "name": "aydin-hassan/xml-fuse",
