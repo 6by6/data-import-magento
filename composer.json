@@ -30,7 +30,7 @@
         "portphp/steps": "^1.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "~4.0",
+        "phpunit/phpunit": "~4.0 | ^7.0",
         "squizlabs/php_codesniffer": "~2",
         "firegento/magento": "~1.9",
         "codeception/aspect-mock": "^0.5.3"
