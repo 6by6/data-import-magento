@@ -35,8 +35,13 @@
         "codeception/aspect-mock": "^0.5.3"
     },
     "autoload": {
-        "psr-0": {
-            "Jh\\DataImportMagento": "src"
+        "psr-4": {
+            "SixBySix\\Port\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SixBySix\\Port\\Test\\": "tests"
         }
     }
 }

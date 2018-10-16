@@ -1,0 +1,101 @@
+<?php
+
+namespace SixBySix\PortTest\Service;
+
+use SixBySix\Port\Service\RemoteImageImporter;
+
+/**
+ * Class RemoteImageImporterTest
+ * @package SixBySix\PortTest\Service
+ * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ */
+class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
+{
+    /**
+     * @var RemoteImageImporter
+     */
+    private $importer;
+
+    /**
+     * @var \Mage_Catalog_Model_Product
+     */
+    private $product;
+
+    public function setup()
+    {
+        $this->importer = new RemoteImageImporter;
+        $this->product = $this->getMock('\Mage_Catalog_Model_Product', [], [], '', false);
+    }
+
+    public function testImportImage()
+    {
+        $url  = __DIR__ . '/../Fixtures/honey.jpg';
+        $path = realpath(__DIR__ . '/../../../');
+        $path .= '/vendor/wearejh/magento-ce/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
+
+        $this->product
+            ->expects($this->once())
+            ->method('addImageToMediaGallery')
+            ->with($path, ['thumbnail', 'small_image', 'image'], true, false);
+
+        $resource = $this->getMockBuilder('Mage_Core_Model_Mysql4_Abstract')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->product
+            ->expects($this->once())
+            ->method('getResource')
+            ->will($this->returnValue($resource));
+
+        $resource
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->product);
+
+        $this->importer->importImage($this->product, $url);
+
+        unlink($path);
+        rmdir(dirname($path));
+    }
+
+    public function testImportThrowsExceptionIfImageFailsToDownload()
+    {
+        $url = 'http://www.notaurl.lol';
+        $this->setExpectedException('RuntimeException', 'URL returned nothing: "http://www.notaurl.lol"');
+
+        $this->importer->importImage($this->product, $url);
+    }
+
+    public function testImportThrowsExceptionIfImageFailsToImport()
+    {
+        $url  = __DIR__ . '/../Fixtures/honey.jpg';
+        $path = realpath(__DIR__ . '/../../../');
+        $path .= '/vendor/wearejh/magento-ce/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
+
+        $this->product
+            ->expects($this->once())
+            ->method('addImageToMediaGallery')
+            ->with($path, ['thumbnail', 'small_image', 'image'], true, false);
+
+        $resource = $this->getMockBuilder('Mage_Core_Model_Mysql4_Abstract')
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $this->product
+            ->expects($this->once())
+            ->method('getResource')
+            ->will($this->returnValue($resource));
+
+        $resource
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->product)
+            ->will($this->throwException(new \Mage_Core_Exception('nahhhh')));
+
+        $this->setExpectedException('RuntimeException', 'nahhhh');
+        $this->importer->importImage($this->product, $url);
+
+        unlink($path);
+        rmdir(dirname($path));
+    }
+}

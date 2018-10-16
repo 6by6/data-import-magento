@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<phpunit bootstrap="./test/Bootstrap.php"
+<phpunit bootstrap="./test/bootstrap.php"
          colors="true"
          backupGlobals="false"
 >
 
-    <testsuite name="Jh DataImportMagento tests">
+    <testsuite name="SixBySix Magento Port tests">
         <directory>./test</directory>
     </testsuite>
     <filter>
