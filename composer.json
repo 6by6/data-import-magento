@@ -1,39 +1,48 @@
 {
-    "name": "wearejh/data-import-magento",
-    "description": "Magento extensions for ddeboer/data-import",
+    "name": "sixbysix/port-magento",
+    "description": "Magento extensions for portphp/portphp",
     "keywords": [ "data", "import", "export", "csv", "excel", "doctrine", "magento"],
     "license": "MIT",
     "authors": [
         {
             "name": "Aydin Hassan",
             "email": "aydin@hotmail.co.uk"
+        },
+        {
+            "name": "Adam Paterson",
+            "email": "adam@sixbysix.co.uk"
         }
     ],
     "support": {
-        "issues": "https://github.com/WeareJH/data-import-magento/issues",
-        "source": "https://github.com/WeareJH/data-import-magento"
+        "issues": "https://github.com/sixbysix/port-magento/issues",
+        "source": "https://github.com/sixbysix/port-magento"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "git@github.com:WeareJH/magento-ce.git"
+            "url": "git@github.com:firegento/magento.git"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "ddeboer/data-import": "~0.16.1",
-        "aydin-hassan/xml-fuse": "~0.4"
+        "php": ">= 5.6 | ^7.0",
+        "aydin-hassan/xml-fuse": "~0.4",
+        "portphp/portphp": "^1.3",
+        "portphp/steps": "^1.2"
     },
     "require-dev": {
         "phpunit/phpunit": "~4.0",
         "squizlabs/php_codesniffer": "~2",
-        "satooshi/php-coveralls": "dev-master",
-        "wearejh/magento-ce": "~1.9",
+        "firegento/magento": "~1.9",
         "codeception/aspect-mock": "^0.5.3"
     },
     "autoload": {
-        "psr-0": {
-            "Jh\\DataImportMagento": "src"
+        "psr-4": {
+            "SixBySix\\Port\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SixBySix\\Port\\Test\\": "tests"
         }
     }
 }
