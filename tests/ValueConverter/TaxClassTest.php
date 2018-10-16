@@ -1,20 +1,22 @@
 <?php
 
-namespace Jh\DataImportTest\ValueConverter;
+namespace SixBySix\Port\ValueConverter;
 
 use AspectMock\Proxy\InstanceProxy;
 use AspectMock\Test;
-use SixBySix\Port\ValueConverter\TaxClassValueConverter;
 
 /**
- * Class TaxClassValueConverterTest
- * @package Jh\DataImportTest\ValueConverter
+ * Class TaxClassTest.
+ *
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class TaxClassValueConverterTest extends \PHPUnit_Framework_TestCase
+final class TaxClassTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var TaxClassValueConverter
+     * @var TaxClass
      */
     protected $converter;
 
@@ -23,7 +25,7 @@ class TaxClassValueConverterTest extends \PHPUnit_Framework_TestCase
      */
     protected $mageDouble;
 
-    public function setup()
+    protected function setup()
     {
         $taxClassSourceProduct = $this->getMockBuilder('\Mage_Tax_Model_Class_Source_Product')
             ->disableOriginalConstructor()
@@ -39,28 +41,29 @@ class TaxClassValueConverterTest extends \PHPUnit_Framework_TestCase
             ]));
 
         $this->mageDouble = Test::double('Mage', ['getSingleton' => $taxClassSourceProduct]);
-        $this->converter = new TaxClassValueConverter;
+        $this->converter = new TaxClass();
     }
 
     public function testExceptionIsThrownIfInvalidTaxClassIsPassed()
     {
-        $message  = 'Given Tax-Class: "no-tax-yeah-right" is not valid. Allowed values: ';
+        $message = 'Given Tax-Class: "no-tax-yeah-right" is not valid. Allowed values: ';
         $message .= '"Taxable Goods", "Shipping"';
 
-        $this->setExpectedException('\Ddeboer\DataImport\Exception\UnexpectedValueException', $message);
+        $this->expectException('\Port\Exception\UnexpectedValueException');
+        $this->expectExceptionMessage($message);
         $this->converter->convert('no-tax-yeah-right');
         $this->mageDouble->verifyInvoked('getSingleton', ['tax/class_source_product']);
     }
 
     public function testConvert()
     {
-        $this->assertEquals(2, $this->converter->convert('Taxable Goods'));
+        $this->assertSame(2, $this->converter->convert('Taxable Goods'));
         $this->mageDouble->verifyInvoked('getSingleton', ['tax/class_source_product']);
     }
 
     public function testDefaultValueIsUsedIfNoValueSet()
     {
-        $this->assertEquals(2, $this->converter->convert(""));
+        $this->assertSame(2, $this->converter->convert(''));
         $this->mageDouble->verifyInvoked('getSingleton', ['tax/class_source_product']);
     }
 }

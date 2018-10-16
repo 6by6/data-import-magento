@@ -2,22 +2,20 @@
 
 namespace SixBySix\Port\ValueConverter;
 
-use Ddeboer\DataImport\Exception\UnexpectedTypeException;
-use Ddeboer\DataImport\Exception\UnexpectedValueException;
-use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
+use Port\Exception\UnexpectedValueException;
 
 /**
- * Class ProductStatusValueConverter
- * @package SixBySix\Port\ValueConverter
+ * Class ProductStatus.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class ProductStatusValueConverter implements ValueConverterInterface
+class ProductStatus
 {
-
     /**
      * @var array
      */
-    private $productStatuses = [];
+    private $productStatuses;
 
     /**
      * @var string
@@ -25,7 +23,7 @@ class ProductStatusValueConverter implements ValueConverterInterface
     private $default = 'Disabled';
 
     /**
-     *  Get the Tax Classes
+     *  Get the Tax Classes.
      */
     public function __construct()
     {
@@ -34,6 +32,7 @@ class ProductStatusValueConverter implements ValueConverterInterface
 
     /**
      * @param string $input
+     *
      * @return string
      */
     public function convert($input)
@@ -42,7 +41,7 @@ class ProductStatusValueConverter implements ValueConverterInterface
             $input = $this->default;
         }
 
-        if (!in_array($input, $this->productStatuses)) {
+        if (!\in_array($input, $this->productStatuses, true)) {
             throw new UnexpectedValueException(
                 sprintf(
                     'Given Product Status: "%s" is not valid. Allowed values: "%s"',
@@ -52,6 +51,6 @@ class ProductStatusValueConverter implements ValueConverterInterface
             );
         }
 
-        return array_search($input, $this->productStatuses);
+        return array_search($input, $this->productStatuses, true);
     }
 }

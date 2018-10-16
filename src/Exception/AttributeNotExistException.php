@@ -2,17 +2,17 @@
 
 namespace SixBySix\Port\Exception;
 
-use Ddeboer\DataImport\Exception\ExceptionInterface;
 use Exception;
+use Port\Exception as PortException;
 
 /**
- * Class AttributeNotExistException
- * @package SixBySix\Port\Exception
+ * Exception thrown when attribute code does not exist in Magento.
+ *
+ * @author SixBySix <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class AttributeNotExistException extends Exception implements ExceptionInterface
+class AttributeNotExistException extends Exception implements PortException
 {
-
     /**
      * @param string $attributeCode
      */

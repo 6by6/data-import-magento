@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<phpunit bootstrap="./test/bootstrap.php"
+<phpunit bootstrap="./tests/bootstrap.php"
          colors="true"
          backupGlobals="false"
 >
 
     <testsuite name="SixBySix Magento Port tests">
-        <directory>./test</directory>
+        <directory>./tests</directory>
     </testsuite>
     <filter>
         <whitelist addUncoveredFilesFromWhitelist="true">

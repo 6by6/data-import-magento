@@ -3,86 +3,90 @@
 namespace SixBySix\PortTest\ItemConverter;
 
 use SixBySix\Port\ItemConverter\RemoveUnwantedFieldsConverter;
-use MyProject\Proxies\__CG__\stdClass;
 
 /**
- * Class RemoveUnwantedFieldsConverterTest
- * @package Ddeboer\DataImport\Tests\ItemConverter
+ * Class RemoveUnwantedFieldsConverterTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class RemoveUnwantedFieldsConverterTest extends \PHPUnit_Framework_TestCase
+final class RemoveUnwantedFieldsConverterTest extends \PHPUnit\Framework\TestCase
 {
     public function testConvert()
     {
-        $input = array(
+        $input = [
             'foo' => 'bar',
             'keepMe1' => 'foo',
             'keepMe2' => 'bar',
-        );
+        ];
 
-        $fieldsToKeep = array('keepMe1', 'keepMe2');
+        $fieldsToKeep = ['keepMe1', 'keepMe2'];
         $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
 
         $output = $converter->convert($input);
 
-        $expected = array(
+        $expected = [
             'keepMe1' => 'foo',
             'keepMe2' => 'bar',
-        );
-        $this->assertEquals($expected, $output);
+        ];
+        $this->assertSame($expected, $output);
     }
 
     public function testNestedFieldsConvert()
     {
         $input = [
-            'foo'       => 'bar',
-            'keepMe1'   => 'foo',
+            'foo' => 'bar',
+            'keepMe1' => 'foo',
             'items' => [
                 [
-                    'one'       => 'one',
-                    'two'       => 'two',
+                    'one' => 'one',
+                    'two' => 'two',
                     'notNeeded' => 'deleteMe',
                 ],
                 [
-                    'one'                   => 'one',
-                    'two'                   => 'two',
-                    'doNotNeedThisEither'   => 'deleteMe'
-                ]
-            ]
+                    'one' => 'one',
+                    'two' => 'two',
+                    'doNotNeedThisEither' => 'deleteMe',
+                ],
+            ],
         ];
 
         $fieldsToKeep = [
             'keepMe1',
             'items' => [
                 'one',
-                'two'
+                'two',
             ],
         ];
         $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
 
         $expected = [
-            'keepMe1'   => 'foo',
+            'keepMe1' => 'foo',
             'items' => [
                 [
-                    'one'   => 'one',
-                    'two'   => 'two',
+                    'one' => 'one',
+                    'two' => 'two',
                 ],
                 [
-                    'one'   => 'one',
-                    'two'   => 'two',
-                ]
-            ]
+                    'one' => 'one',
+                    'two' => 'two',
+                ],
+            ],
         ];
 
         $output = $converter->convert($input);
-        $this->assertEquals($expected, $output);
+        $this->assertSame($expected, $output);
     }
 
     public function testConverterThrowsExceptionIfInputNotArray()
     {
         $converter = new RemoveUnwantedFieldsConverter([]);
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\UnexpectedTypeException',
+        $this->expectException(
+            'Port\Exception\UnexpectedTypeException'
+        );
+        $this->expectExceptionMessage(
             'Expected argument of type "array", "stdClass" given'
         );
         $converter->convert(new \stdClass());
@@ -95,8 +99,8 @@ class RemoveUnwantedFieldsConverterTest extends \PHPUnit_Framework_TestCase
                 'one',
             ],
         ];
-        $converter  = new RemoveUnwantedFieldsConverter($fieldsToKeep);
-        $input      = [];
+        $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
+        $input = [];
 
         $this->assertSame(['items' => []], $converter->convert($input));
     }
@@ -109,13 +113,15 @@ class RemoveUnwantedFieldsConverterTest extends \PHPUnit_Framework_TestCase
             ],
         ];
 
-        $converter  = new RemoveUnwantedFieldsConverter($fieldsToKeep);
-        $input      = [
-            'items' => new \stdClass
+        $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
+        $input = [
+            'items' => new \stdClass(),
         ];
 
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\UnexpectedTypeException',
+        $this->expectException(
+            'Port\Exception\UnexpectedTypeException'
+        );
+        $this->expectExceptionMessage(
             'Expected argument of type "array", "stdClass" given'
         );
         $converter->convert($input);
@@ -128,18 +134,18 @@ class RemoveUnwantedFieldsConverterTest extends \PHPUnit_Framework_TestCase
                 'one',
             ],
         ];
-        $converter  = new RemoveUnwantedFieldsConverter($fieldsToKeep);
+        $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
 
         $input = [
             'items' => [
-                []
-            ]
+                [],
+            ],
         ];
 
         $expected = [
             'items' => [
-                ['one' => '']
-            ]
+                ['one' => ''],
+            ],
         ];
 
         $this->assertSame($expected, $converter->convert($input));
@@ -148,14 +154,14 @@ class RemoveUnwantedFieldsConverterTest extends \PHPUnit_Framework_TestCase
     public function testFirstLevelDataIsPopulatedWithDefaultValueIfRequiredFieldDoesNotExist()
     {
         $fieldsToKeep = [
-            'name'
+            'name',
         ];
-        $converter  = new RemoveUnwantedFieldsConverter($fieldsToKeep);
+        $converter = new RemoveUnwantedFieldsConverter($fieldsToKeep);
 
         $input = [];
 
         $expected = [
-            'name' => ''
+            'name' => '',
         ];
 
         $this->assertSame($expected, $converter->convert($input));

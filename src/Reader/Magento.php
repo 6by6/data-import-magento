@@ -2,51 +2,52 @@
 
 namespace SixBySix\Port\Reader;
 
-use Ddeboer\DataImport\Exception\ReaderException;
-use Ddeboer\DataImport\Reader\ReaderInterface;
+use Port\Reader;
 
 /**
- * Class AbstractMagentoReader
- * @package SixBySix\Port\Reader
+ * Magento will read a Magento 1.x collection.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class MagentoReader implements ReaderInterface
+class Magento implements Reader
 {
     /**
      * @var \Mage_Core_Model_Resource_Db_Collection_Abstract
      */
-    protected $collection;
+    private $collection;
 
     /**
-     * @var Zend_Db_Statement_Interface
+     * @var \Zend_Db_Statement_Interface
      */
-    protected $statement;
+    private $statement;
 
     /**
      * @var array Current Row
      */
-    protected $data = array();
+    private $data = [];
 
     /**
      * @var int
      */
-    protected $current = 0;
+    private $current = 0;
 
     /**
-     * @var int|null
+     * @var null|int
      */
-    protected $count = null;
+    private $count;
 
     /**
      * @var null|\Varien_Db_Select
      */
-    protected $select = null;
+    private $select;
 
     /**
      * @param \Mage_Core_Model_Resource_Db_Collection_Abstract $collection
      */
-    public function __construct(\Mage_Core_Model_Resource_Db_Collection_Abstract $collection)
-    {
+    public function __construct(
+        \Mage_Core_Model_Resource_Db_Collection_Abstract $collection
+    ) {
         $this->collection = $collection;
 
         //get SQL statement
@@ -54,7 +55,7 @@ class MagentoReader implements ReaderInterface
     }
 
     /**
-     * Get the next row of data and store it
+     * Get the next row of data and store it.
      *
      * @return array
      */
@@ -64,17 +65,16 @@ class MagentoReader implements ReaderInterface
     }
 
     /**
-     * Fetch next row and
-     * advance the current row index
+     * Fetch next row and advance the current row index.
      */
     public function next()
     {
         $this->data = $this->statement->fetch();
-        $this->current++;
+        ++$this->current;
     }
 
     /**
-     * Return current position
+     * Return current position.
      *
      * @return int
      */
@@ -85,15 +85,16 @@ class MagentoReader implements ReaderInterface
 
     /**
      * Check whether the current index is not greater
-     * then the size of the collection
+     * then the size of the collection.
      *
      * @return bool
      */
     public function valid()
     {
-        /**
-         * Make sure $this->data is not false
-         * Wierd bug with Magento getSize() on a collection
+        /*
+         * Make sure $this->data is not false.
+         *
+         * A wierd bug with Magento getSize() on a collection
          * using joins & GROUP BY. COUNT(DISTINCT(idfield))
          * seems to fix it but is hard to patch. This simple check should return false
          * if the row if null
@@ -102,7 +103,7 @@ class MagentoReader implements ReaderInterface
     }
 
     /**
-     * Rewind to the first element
+     * Rewind to the first element.
      */
     public function rewind()
     {
@@ -112,12 +113,16 @@ class MagentoReader implements ReaderInterface
     }
 
     /**
-     * Get the field (column, property) names
+     * Get the field (column, property) names.
+     *
+     * @throws \Zend_Db_Statement_Exception
      *
      * @return array
      */
     public function getFields()
     {
+        $data = [];
+
         if (empty($this->data)) {
             $data = $this->select->query()->fetch();
         }
@@ -126,15 +131,16 @@ class MagentoReader implements ReaderInterface
     }
 
     /**
-     * Magento creates a COUNT(*) query for us
+     * Magento creates a COUNT(*) query for us.
      *
      * @return int
      */
     public function count()
     {
-        if (null == $this->count) {
+        if (null === $this->count) {
             $this->count = $this->collection->getSize();
         }
+
         return $this->count;
     }
 }

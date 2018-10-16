@@ -5,13 +5,15 @@ namespace SixBySix\PortTest\Service;
 use SixBySix\Port\Service\AttributeService;
 
 /**
- * Class AttributeServiceTest
- * @package SixBySix\PortTest\Service
+ * Class AttributeServiceTest.
+ *
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class AttributeServiceTest extends \PHPUnit_Framework_TestCase
+final class AttributeServiceTest extends \PHPUnit\Framework\TestCase
 {
-
     /**
      * @var /Mage_Eav_Model_Entity_Attribute
      */
@@ -27,21 +29,21 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
      */
     protected $attributeService;
 
-    public function setUp()
+    protected function setUp()
     {
-        $this->attrModel        = $this->getMock('\Mage_Eav_Model_Entity_Attribute');
-        $this->attrSrcModel     = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Source_Table');
+        $this->attrModel = $this->createMock('\Mage_Eav_Model_Entity_Attribute');
+        $this->attrSrcModel = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Source_Table');
         $this->attributeService = new AttributeService($this->attrModel, $this->attrSrcModel);
     }
 
     public function testGetAttributeCreatesAttributeOptionIfItDoesNotExist()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
+        $options = [
+            ['label' => 'option1', 'value' => 'code1'],
+            ['label' => 'option2', 'value' => 'code2'],
+        ];
 
         $this->attrModel
             ->expects($this->once())
@@ -72,11 +74,11 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->with('option3')
             ->will($this->returnValue('code3'));
 
-        $data = array(
-            'value' => array(
-                'option' => array('option3', 'option3')
-            )
-        );
+        $data = [
+            'value' => [
+                'option' => ['option3', 'option3'],
+            ],
+        ];
 
         $attribute
             ->expects($this->once())
@@ -93,17 +95,17 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code3', 'option3');
-        $this->assertEquals($ret, 'code3');
+        $this->assertSame($ret, 'code3');
     }
 
     public function testGetAttributeCreatesAttributeOptionIfItDoesNotExistAndCachesIt()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
+        $options = [
+            ['label' => 'option1', 'value' => 'code1'],
+            ['label' => 'option2', 'value' => 'code2'],
+        ];
 
         $this->attrModel
             ->expects($this->once())
@@ -134,11 +136,11 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->with('option3')
             ->will($this->returnValue('code3'));
 
-        $data = array(
-            'value' => array(
-                'option' => array('option3', 'option3')
-            )
-        );
+        $data = [
+            'value' => [
+                'option' => ['option3', 'option3'],
+            ],
+        ];
 
         $attribute
             ->expects($this->once())
@@ -155,21 +157,21 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code3', 'option3');
-        $this->assertEquals($ret, 'code3');
+        $this->assertSame($ret, 'code3');
 
         //pls load from cache
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code3', 'option3');
-        $this->assertEquals($ret, 'code3');
+        $this->assertSame($ret, 'code3');
     }
 
     public function testGetAttributeReturnsIdIfItExists()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
+        $options = [
+            ['label' => 'option1', 'value' => 'code1'],
+            ['label' => 'option2', 'value' => 'code2'],
+        ];
 
         $this->attrModel
             ->expects($this->once())
@@ -208,12 +210,12 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code2', 'option2');
-        $this->assertEquals($ret, 'code2');
+        $this->assertSame($ret, 'code2');
     }
 
     public function testGetAttributeReturnsValueIfAttributeDoesNotUseSource()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
         $this->attrModel
             ->expects($this->once())
@@ -233,13 +235,15 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(false));
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'attribute_code', 'some_value');
-        $this->assertEquals($ret, 'some_value');
+        $this->assertSame($ret, 'some_value');
     }
 
     public function testGetAttributeThrowsExceptionIfAttributeDoesNotExist()
     {
-        $this->setExpectedException(
-            'SixBySix\Port\Exception\AttributeNotExistException',
+        $this->expectException(
+            'SixBySix\Port\Exception\AttributeNotExistException'
+        );
+        $this->expectExceptionMessage(
             'Attribute with code: "not_here" does not exist'
         );
 
@@ -254,12 +258,12 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
 
     public function testAllAttributeOptionsAreCached()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
+        $options = [
+            ['label' => 'option1', 'value' => 'code1'],
+            ['label' => 'option2', 'value' => 'code2'],
+        ];
 
         $this->attrModel
             ->expects($this->once())
@@ -298,21 +302,21 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code2', 'option2');
-        $this->assertEquals($ret, 'code2');
+        $this->assertSame($ret, 'code2');
 
         //retrieve via cache hopefully
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code2', 'option2');
-        $this->assertEquals($ret, 'code2');
+        $this->assertSame($ret, 'code2');
     }
 
     public function testGetAttributeValueIdIsNotCaseSensitive()
     {
-        $attribute = $this->getMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
+        $attribute = $this->createMock('\Mage_Eav_Model_Entity_Attribute_Abstract');
 
-        $options = array(
-            array('label' => 'option1', 'value' => 'code1'),
-            array('label' => 'option2', 'value' => 'code2'),
-        );
+        $options = [
+            ['label' => 'option1', 'value' => 'code1'],
+            ['label' => 'option2', 'value' => 'code2'],
+        ];
 
         $this->attrModel
             ->expects($this->once())
@@ -351,6 +355,6 @@ class AttributeServiceTest extends \PHPUnit_Framework_TestCase
             ->method('save');
 
         $ret = $this->attributeService->getAttrCodeCreateIfNotExist('catalog_product', 'code2', 'OPTION2');
-        $this->assertEquals($ret, 'code2');
+        $this->assertSame($ret, 'code2');
     }
 }

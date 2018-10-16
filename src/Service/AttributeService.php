@@ -5,8 +5,9 @@ namespace SixBySix\Port\Service;
 use SixBySix\Port\Exception\AttributeNotExistException;
 
 /**
- * Class AttributeService
- * @package SixBySix\Port\Service
+ * Class AttributeService.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
  */
 class AttributeService
@@ -24,26 +25,28 @@ class AttributeService
     /**
      * @var array
      */
-    protected $cachedAttributeOptionsValues = array();
+    protected $cachedAttributeOptionsValues = [];
 
     /**
-     * @param \Mage_Eav_Model_Entity_Attribute $eavAttrModel
+     * @param \Mage_Eav_Model_Entity_Attribute              $eavAttrModel
      * @param \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
      */
     public function __construct(
         \Mage_Eav_Model_Entity_Attribute $eavAttrModel,
         \Mage_Eav_Model_Entity_Attribute_Source_Table $eavAttrSrcModel
     ) {
-        $this->eavAttrModel      = $eavAttrModel;
-        $this->eavAttrSrcModel   = $eavAttrSrcModel;
+        $this->eavAttrModel = $eavAttrModel;
+        $this->eavAttrSrcModel = $eavAttrSrcModel;
     }
 
     /**
      * @param string $entityType
      * @param string $attrCode
      * @param string $attrValue
-     * @return string Attribute Value or ID
+     *
      * @throws AttributeNotExistException
+     *
+     * @return string Attribute Value or ID
      */
     public function getAttrCodeCreateIfNotExist($entityType, $attrCode, $attrValue)
     {
@@ -52,9 +55,9 @@ class AttributeService
             return $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue];
         }
 
-        $attrModel              = clone $this->eavAttrModel;
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
-        $attributeId            = $attrModel->getIdByCode($entityType, $attrCode);
+        $attrModel = clone $this->eavAttrModel;
+        $attributeOptionsModel = clone $this->eavAttrSrcModel;
+        $attributeId = $attrModel->getIdByCode($entityType, $attrCode);
 
         if (false === $attributeId) {
             throw new AttributeNotExistException($attrCode);
@@ -64,6 +67,7 @@ class AttributeService
 
         if (!$attribute->usesSource()) {
             $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $attrValue;
+
             return $attrValue;
         }
 
@@ -71,8 +75,8 @@ class AttributeService
         $options = $attributeOptionsModel->getAllOptions(false);
 
         foreach ($options as $option) {
-            $optionId       = strtolower($option['value']);
-            $optionValue    = strtolower($option['label']);
+            $optionId = strtolower($option['value']);
+            $optionValue = strtolower($option['label']);
 
             $this->cachedAttributeOptionsValues[$entityType][$attrCode][$optionValue] = $optionId;
         }
@@ -82,18 +86,19 @@ class AttributeService
         }
 
         //not found - create it
-        $attribute->setData('option', array(
-            'value' => array(
-                'option' => array($attrValue, $attrValue)
-            )
-        ));
+        $attribute->setData('option', [
+            'value' => [
+                'option' => [$attrValue, $attrValue],
+            ],
+        ]);
         $attribute->save();
 
-        $attributeOptionsModel  = clone $this->eavAttrSrcModel;
+        $attributeOptionsModel = clone $this->eavAttrSrcModel;
         $attributeOptionsModel->setAttribute($attribute);
         $id = $attributeOptionsModel->getOptionId($attrValue);
 
         $this->cachedAttributeOptionsValues[$entityType][$attrCode][$attrValue] = $id;
+
         return $id;
     }
 }

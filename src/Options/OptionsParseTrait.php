@@ -3,8 +3,9 @@
 namespace SixBySix\Port\Options;
 
 /**
- * Class OptionsParseTrait
- * @package SixBySix\Port\Options
+ * Class OptionsParseTrait.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
 trait OptionsParseTrait
@@ -12,6 +13,7 @@ trait OptionsParseTrait
     /**
      * @param $allowedOptions
      * @param $options
+     *
      * @return array
      */
     public function parseOptions(array $allowedOptions, array $options)
@@ -22,10 +24,10 @@ trait OptionsParseTrait
                 $cleanOptions[$optionName] = $optionValue;
             }
         }
-        $cleanOptions       = array_merge($allowedOptions, $cleanOptions);
+        $cleanOptions = array_merge($allowedOptions, $cleanOptions);
         $notAcceptedOptions = array_keys(array_diff_key($options, $cleanOptions));
 
-        if (count($notAcceptedOptions)) {
+        if (\count($notAcceptedOptions)) {
             throw new \InvalidArgumentException(
                 sprintf("'%s' are not accepted options'", implode("', '", $notAcceptedOptions))
             );

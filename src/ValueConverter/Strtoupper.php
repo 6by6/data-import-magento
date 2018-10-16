@@ -2,25 +2,26 @@
 
 namespace SixBySix\Port\ValueConverter;
 
-use Ddeboer\DataImport\Exception\UnexpectedTypeException;
-use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
+use Port\Exception\UnexpectedTypeException;
 
 /**
- * Class StrtoupperValueConverter
- * @package SixBySix\Port\ValueConverter
+ * Class Strtoupper.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class StrtoupperValueConverter implements ValueConverterInterface
+class Strtoupper
 {
-
     /**
      * @param string $input
-     * @return string
+     *
      * @throws UnexpectedTypeException
+     *
+     * @return string
      */
     public function convert($input)
     {
-        if (!is_string($input)) {
+        if (!\is_string($input)) {
             throw new UnexpectedTypeException($input, 'string');
         }
 

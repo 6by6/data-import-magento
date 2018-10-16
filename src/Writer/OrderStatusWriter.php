@@ -2,14 +2,17 @@
 
 namespace SixBySix\Port\Writer;
 
-use Ddeboer\DataImport\Exception\WriterException;
 use Ddeboer\DataImport\Writer\WriterInterface;
+use Port\Exception\WriterException;
+use Port\Writer;
 
 /**
- * Class OrderStatusWriter
+ * Class OrderStatusWriter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk.com>
  */
-class OrderStatusWriter implements WriterInterface
+class OrderStatusWriter implements Writer
 {
     /**
      * @var \Mage_Core_Model_Resource_Transaction
@@ -25,45 +28,46 @@ class OrderStatusWriter implements WriterInterface
      * @var array
      */
     protected $options = [
-        'order_id_field'            => 'increment_id',
-        'send_shipment_email'       => true,
-        'send_credit_memo_email'    => true,
+        'order_id_field' => 'increment_id',
+        'send_shipment_email' => true,
+        'send_credit_memo_email' => true,
     ];
 
     /**
-     * @param \Mage_Sales_Model_Order $orderModel
+     * @param \Mage_Sales_Model_Order               $orderModel
      * @param \Mage_Core_Model_Resource_Transaction $transactionResourceModel
      */
     public function __construct(
         \Mage_Sales_Model_Order $orderModel,
         \Mage_Core_Model_Resource_Transaction $transactionResourceModel
     ) {
-        $this->orderModel                   = $orderModel;
-        $this->transactionResourceModel     = $transactionResourceModel;
+        $this->orderModel = $orderModel;
+        $this->transactionResourceModel = $transactionResourceModel;
     }
 
     /**
      * @param array $item
-     * @return $this
+     *
      * @throws MagentoSaveException
-     * @throws \Ddeboer\DataImport\Exception\WriterException
+     * @throws \Port\Exception\WriterException
+     *
+     * @return $this
      */
     public function writeItem(array $item)
     {
-
         if (!isset($item['orderId'])) {
             throw new WriterException('order_id must be set');
         }
 
         $order = $this->getOrder($item['orderId']);
 
-        $quantities             = $this->validateItemsToBeShipped($order, $item['items']);
-        $alreadyRefunded        = $this->getItemsShipped($order);
+        $quantities = $this->validateItemsToBeShipped($order, $item['items']);
+        $alreadyRefunded = $this->getItemsShipped($order);
         //TODO: Make this configurable - Some Returns will not include the total qty's shipped
         //TODO: Just the exact qty to ship.
-        $shipmentQuantities     = $this->getActualShipmentCount($alreadyRefunded, $quantities);
+        $shipmentQuantities = $this->getActualShipmentCount($alreadyRefunded, $quantities);
 
-        if (count($shipmentQuantities)) {
+        if (\count($shipmentQuantities)) {
             //ship it
             //TODO: Check if successful by catching exceptions
             try {
@@ -73,13 +77,13 @@ class OrderStatusWriter implements WriterInterface
             }
         }
 
-        $quantities         = $this->validateItemsToBeRefunded($order, $item['items']);
-        $alreadyReturned    = $this->getItemsRefunded($order);
+        $quantities = $this->validateItemsToBeRefunded($order, $item['items']);
+        $alreadyReturned = $this->getItemsRefunded($order);
         //TODO: Make this configurable - Some Returns will not include the total qty's returned
         //TODO: Just the exact qty to return.
-        $returnQuantities    = $this->getActualRefundCount($alreadyReturned, $quantities);
+        $returnQuantities = $this->getActualRefundCount($alreadyReturned, $quantities);
 
-        if (count($returnQuantities)) {
+        if (\count($returnQuantities)) {
             //credit memo it
             try {
                 $this->creditMemo($order, $returnQuantities);
@@ -103,14 +107,13 @@ class OrderStatusWriter implements WriterInterface
     }
 
     /**
-     * Create a Credit Memo with the Specified Quantities
+     * Create a Credit Memo with the Specified Quantities.
      *
      * @param \Mage_Sales_Model_Order $order
-     * @param array $quantities
+     * @param array                   $quantities
      */
     public function ship(\Mage_Sales_Model_Order $order, array $quantities)
     {
-
         if (!$order->canShip()) {
             //throw
         }
@@ -138,14 +141,13 @@ class OrderStatusWriter implements WriterInterface
     }
 
     /**
-     * Create a Credit Memo with the Specified Quantities
+     * Create a Credit Memo with the Specified Quantities.
      *
      * @param \Mage_Sales_Model_Order $order
-     * @param array $quantities
+     * @param array                   $quantities
      */
     public function creditMemo(\Mage_Sales_Model_Order $order, array $quantities)
     {
-
         if (!$order->canCreditmemo()) {
             //throw
         }
@@ -154,10 +156,10 @@ class OrderStatusWriter implements WriterInterface
 
         /** @var \Mage_Sales_Model_Order_Creditmemo $creditMemo */
         $creditMemo = $service->prepareCreditmemo([
-            'qtys'              => $quantities,
+            'qtys' => $quantities,
             //TODO: Make this configurable - have an option whether to refund shipping or not
             //TODO: if yes, then grab the amount from the input data
-            'shipping_amount'   => 0,
+            'shipping_amount' => 0,
         ]);
 
         if ($this->options['send_credit_memo_email']) {
@@ -184,10 +186,11 @@ class OrderStatusWriter implements WriterInterface
         }
     }
 
-
     /**
      * @param int $orderId
+     *
      * @throws WriterException
+     *
      * @return \Mage_Sales_Model_Order
      */
     public function getOrder($orderId)
@@ -218,6 +221,7 @@ class OrderStatusWriter implements WriterInterface
      *
      * @param array $alreadyShipped
      * @param array $toShip
+     *
      * @return array
      */
     public function getActualShipmentCount(array $alreadyShipped, array $toShip)
@@ -230,15 +234,17 @@ class OrderStatusWriter implements WriterInterface
                 $actualShip[$itemId] = $qty;
             }
 
-            if ($actualShip[$itemId] == 0) {
+            if (0 === $actualShip[$itemId]) {
                 unset($actualShip[$itemId]);
             }
         }
+
         return $actualShip;
     }
 
     /**
      * @param \Mage_Sales_Model_Order $order
+     *
      * @return array
      */
     public function getItemsShipped(\Mage_Sales_Model_Order $order)
@@ -262,9 +268,11 @@ class OrderStatusWriter implements WriterInterface
 
     /**
      * @param \Mage_Sales_Model_Order $order
-     * @param array $items
-     * @return array
+     * @param array                   $items
+     *
      * @throws WriterException
+     *
+     * @return array
      */
     public function validateItemsToBeShipped(\Mage_Sales_Model_Order $order, array $items)
     {
@@ -293,6 +301,7 @@ class OrderStatusWriter implements WriterInterface
      *
      * @param array $alreadyRefunded
      * @param array $toRefund
+     *
      * @return array
      */
     public function getActualRefundCount(array $alreadyRefunded, array $toRefund)
@@ -305,15 +314,17 @@ class OrderStatusWriter implements WriterInterface
                 $actualRefund[$itemId] = $qty;
             }
 
-            if ($actualRefund[$itemId] == 0) {
+            if (0 === $actualRefund[$itemId]) {
                 unset($actualRefund[$itemId]);
             }
         }
+
         return $actualRefund;
     }
 
     /**
      * @param \Mage_Sales_Model_Order $order
+     *
      * @return array
      */
     public function getItemsRefunded(\Mage_Sales_Model_Order $order)
@@ -337,9 +348,11 @@ class OrderStatusWriter implements WriterInterface
 
     /**
      * @param \Mage_Sales_Model_Order $order
-     * @param array $items
-     * @return array
+     * @param array                   $items
+     *
      * @throws WriterException
+     *
+     * @return array
      */
     public function validateItemsToBeRefunded(\Mage_Sales_Model_Order $order, array $items)
     {
@@ -359,7 +372,7 @@ class OrderStatusWriter implements WriterInterface
     }
 
     /**
-     * Wrap up the writer after all items have been written
+     * Wrap up the writer after all items have been written.
      *
      * @return WriterInterface
      */
@@ -368,7 +381,7 @@ class OrderStatusWriter implements WriterInterface
     }
 
     /**
-     * Prepare the writer before writing the items
+     * Prepare the writer before writing the items.
      *
      * @return WriterInterface
      */
@@ -378,6 +391,7 @@ class OrderStatusWriter implements WriterInterface
 
     /**
      * @param \Mage_Sales_Model_Order $order
+     *
      * @return \Mage_Sales_Model_Service_Order
      */
     public function getServiceForOrder(\Mage_Sales_Model_Order $order)

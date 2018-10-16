@@ -1,18 +1,19 @@
 <?php
+
 namespace SixBySix\Port\Writer;
 
-use Ddeboer\DataImport\Exception\WriterException;
-use Ddeboer\DataImport\Writer\AbstractWriter;
+use Port\Exception\WriterException;
+use Port\Writer;
 use SixBySix\Port\Exception\MagentoSaveException;
-use SebastianBergmann\Exporter\Exception;
 
 /**
- * Class OrderWriter
- * @package SixBySix\Port\Writer
+ * Class OrderWriter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@wearejh.com>
  * @author Adam Paterson <adam@wearejh.com>
  */
-class OrderWriter extends AbstractWriter
+class OrderWriter implements Writer
 {
     /**
      * @var \Mage_Sales_Model_Quote
@@ -40,23 +41,23 @@ class OrderWriter extends AbstractWriter
     protected $quoteItemModel;
 
     /**
-     * @var string|null
+     * @var null|string
      */
     protected $customerMappingAttribute;
 
     /**
-     * @var string|null
+     * @var null|string
      */
     protected $paymentMethodCode;
 
     /**
-     * @param \Mage_Sales_Model_Quote $quoteModel
+     * @param \Mage_Sales_Model_Quote         $quoteModel
      * @param \Mage_Sales_Model_Convert_Quote $convertQuoteModel
-     * @param \Mage_Customer_Model_Customer $customerModel
-     * @param \Mage_Catalog_Model_Product $productModel
-     * @param \Mage_Sales_Model_Quote_Item $quoteItemModel
-     * @param string $customerMappingAttribute
-     * @param string $paymentMethodCode
+     * @param \Mage_Customer_Model_Customer   $customerModel
+     * @param \Mage_Catalog_Model_Product     $productModel
+     * @param \Mage_Sales_Model_Quote_Item    $quoteItemModel
+     * @param string                          $customerMappingAttribute
+     * @param string                          $paymentMethodCode
      */
     public function __construct(
         \Mage_Sales_Model_Quote $quoteModel,
@@ -67,47 +68,47 @@ class OrderWriter extends AbstractWriter
         $customerMappingAttribute = 'email',
         $paymentMethodCode = 'checkmo'
     ) {
-        $this->quoteModel           = $quoteModel;
-        $this->convertQuoteModel    = $convertQuoteModel;
-        $this->customerModel        = $customerModel;
-        $this->productModel         = $productModel;
-        $this->quoteItemModel       = $quoteItemModel;
+        $this->quoteModel = $quoteModel;
+        $this->convertQuoteModel = $convertQuoteModel;
+        $this->customerModel = $customerModel;
+        $this->productModel = $productModel;
+        $this->quoteItemModel = $quoteItemModel;
 
-        if (!is_string($customerMappingAttribute) || !is_string($paymentMethodCode)) {
+        if (!\is_string($customerMappingAttribute) || !\is_string($paymentMethodCode)) {
             throw new \InvalidArgumentException(
-                "Customer Mapping Attribute and Payment Method Code should be strings"
+                'Customer Mapping Attribute and Payment Method Code should be strings'
             );
         }
 
         $this->customerMappingAttribute = $customerMappingAttribute;
-        $this->paymentMethodCode        = $paymentMethodCode;
+        $this->paymentMethodCode = $paymentMethodCode;
     }
 
     /**
      * @param string $attribute
      * @param string $value
+     *
      * @return \Mage_Customer_Model_Customer
      */
     public function getCustomerByAttribute($attribute, $value)
     {
-        $customer = $this->customerModel
+        return $this->customerModel
             ->getCollection()
             ->addAttributeToFilter($attribute, $value)
-            ->addAttributeToSelect("*")
+            ->addAttributeToSelect('*')
             ->getFirstItem();
-        return $customer;
     }
 
     /**
-     * @param \Mage_Sales_Model_Quote $quote
+     * @param \Mage_Sales_Model_Quote       $quote
      * @param \Mage_Customer_Model_Customer $customer
      */
     public function addCustomerToQuote(\Mage_Sales_Model_Quote $quote, \Mage_Customer_Model_Customer $customer)
     {
         $quote->addData([
-            'customer_firstname'    => $customer->getData('firstname'),
-            'customer_lastname'     => $customer->getData('lastname'),
-            'customer_email'        => $customer->getData('email'),
+            'customer_firstname' => $customer->getData('firstname'),
+            'customer_lastname' => $customer->getData('lastname'),
+            'customer_email' => $customer->getData('email'),
         ]);
 
         $quote->setCustomerFirstname($customer->getData('firstname'));
@@ -131,7 +132,8 @@ class OrderWriter extends AbstractWriter
 
     /**
      * @param \Mage_Sales_Model_Quote $quote
-     * @param array $items
+     * @param array                   $items
+     *
      * @throws WriterException
      */
     public function addProductsToQuote(\Mage_Sales_Model_Quote $quote, array $items)
@@ -150,10 +152,10 @@ class OrderWriter extends AbstractWriter
 
             //set prices
             $quoteItem->addData([
-                'price'                 => $item['price'],
-                'base_price'            => $item['price'],
-                'original_price'        => $item['price'],
-                'custom_price'          => $item['price'],
+                'price' => $item['price'],
+                'base_price' => $item['price'],
+                'original_price' => $item['price'],
+                'custom_price' => $item['price'],
                 'original_custom_price' => $item['price'],
             ]);
 
@@ -163,7 +165,8 @@ class OrderWriter extends AbstractWriter
 
     /**
      * @param \Mage_Sales_Model_Quote $quote
-     * @param array $item
+     * @param array                   $item
+     *
      * @return Mage_Sales_Model_Quote
      */
     public function addDetailsToQuote(\Mage_Sales_Model_Quote $quote, array $item)
@@ -173,8 +176,8 @@ class OrderWriter extends AbstractWriter
         );
 
         $quote->addData([
-          'created_at'          => $item['created_at'],
-          'reserved_order_id'   => $item['increment_id'],
+            'created_at' => $item['created_at'],
+            'reserved_order_id' => $item['increment_id'],
         ]);
 
         $quote->getShippingAddress()->addData(['payment_method' => $this->paymentMethodCode]);
@@ -182,7 +185,8 @@ class OrderWriter extends AbstractWriter
 
     /**
      * @param \Mage_Sales_Model_Quote $quote
-     * @param array $orderData
+     * @param array                   $orderData
+     *
      * @return \Mage_Sales_Model_Order
      */
     public function quoteToOrder(\Mage_Sales_Model_Quote $quote, array $orderData)
@@ -205,19 +209,19 @@ class OrderWriter extends AbstractWriter
 
             $lineItem = null;
             foreach ($orderData['items'] as $item) {
-                if ($item['sku']  === $productSku) {
+                if ($item['sku'] === $productSku) {
                     $lineItem = $item;
                 }
             }
 
             $orderItem->addData([
-                'discount_amount'       => $lineItem['discount_amount'],
-                'base_discount_amount'  => $lineItem['discount_amount'],
-                'tax_amount'            => $lineItem['tax_amount'],
-                'base_tax_amount'       => $lineItem['tax_amount'],
-                'gw_price'              => isset($lineItem['gw_price']) ? $lineItem['gw_price'] : 0,
-                'base_gw_price'         => isset($lineItem['gw_price']) ? $lineItem['gw_price'] : 0,
-                'tax_percent'           => $this->calculateTaxPercentage($lineItem['price'], $lineItem['tax_amount']),
+                'discount_amount' => $lineItem['discount_amount'],
+                'base_discount_amount' => $lineItem['discount_amount'],
+                'tax_amount' => $lineItem['tax_amount'],
+                'base_tax_amount' => $lineItem['tax_amount'],
+                'gw_price' => isset($lineItem['gw_price']) ? $lineItem['gw_price'] : 0,
+                'base_gw_price' => isset($lineItem['gw_price']) ? $lineItem['gw_price'] : 0,
+                'tax_percent' => $this->calculateTaxPercentage($lineItem['price'], $lineItem['tax_amount']),
             ]);
 
             $order->addItem($orderItem);
@@ -236,18 +240,18 @@ class OrderWriter extends AbstractWriter
         }
 
         $grandTotal = $this->calculateGrandTotal($order, $orderData);
-        $subTotal   = $this->calculateSubtotal($order);
+        $subTotal = $this->calculateSubtotal($order);
         //Set Data
         $order->addData([
-            'created_at'            => $quote->getCreatedAt(),
-            'base_grand_total'      => $grandTotal,
-            'grand_total'           => $grandTotal,
-            'base_subtotal'         => $subTotal,
-            'subtotal'              => $subTotal,
-            'gw_price'              => $orderData['gw_price'],
-            'base_gw_price'         => $orderData['gw_price'],
-            'discount_amount'       => $orderData['discount_amount'],
-            'base_discount_amount'  => $orderData['discount_amount']
+            'created_at' => $quote->getCreatedAt(),
+            'base_grand_total' => $grandTotal,
+            'grand_total' => $grandTotal,
+            'base_subtotal' => $subTotal,
+            'subtotal' => $subTotal,
+            'gw_price' => $orderData['gw_price'],
+            'base_gw_price' => $orderData['gw_price'],
+            'discount_amount' => $orderData['discount_amount'],
+            'base_discount_amount' => $orderData['discount_amount'],
         ]);
 
         return $order;
@@ -256,20 +260,22 @@ class OrderWriter extends AbstractWriter
     /**
      * @param float $price
      * @param float $taxAmount
+     *
      * @return float
      */
     public function calculateTaxPercentage($price, $taxAmount)
     {
-
         if (0 === (int) $taxAmount) {
             return 0;
         }
+
         return round((100 / $price) * $taxAmount, 1);
     }
 
     /**
      * @param \Mage_Sales_Model_Order $order
-     * @param array $orderData
+     * @param array                   $orderData
+     *
      * @return float
      */
     public function calculateGrandTotal(\Mage_Sales_Model_Order $order, array $orderData)
@@ -286,6 +292,7 @@ class OrderWriter extends AbstractWriter
 
     /**
      * @param \Mage_Sales_Model_Order $order
+     *
      * @return float
      */
     public function calculateSubTotal(\Mage_Sales_Model_Order $order)
@@ -302,9 +309,11 @@ class OrderWriter extends AbstractWriter
 
     /**
      * @param array $item
-     * @return $this|void
-     * @throws \Ddeboer\DataImport\Exception\WriterException
+     *
+     * @throws \Port\Exception\WriterException
      * @throws \SixBySix\Port\Exception\MagentoSaveException
+     *
+     * @return $this|void
      */
     public function writeItem(array $item)
     {
@@ -316,7 +325,6 @@ class OrderWriter extends AbstractWriter
             $item[$this->customerMappingAttribute]
         );
 
-
         if (!$customer->getId()) {
             throw new WriterException(
                 sprintf(
@@ -327,7 +335,7 @@ class OrderWriter extends AbstractWriter
             );
         }
 
-        if (!count($item['items'])) {
+        if (!\count($item['items'])) {
             throw new WriterException(sprintf('No Order Items for Order: "%s"', $item['increment_id']));
         }
 
@@ -352,5 +360,21 @@ class OrderWriter extends AbstractWriter
         } catch (\Exception $e) {
             throw new MagentoSaveException($e->getMessage());
         }
+    }
+
+    /**
+     * Prepare the writer before writing the items.
+     */
+    public function prepare()
+    {
+        return $this;
+    }
+
+    /**
+     * Wrap up the writer after all items have been written.
+     */
+    public function finish()
+    {
+        return $this;
     }
 }

@@ -5,17 +5,20 @@ namespace SixBySix\PortTest\Factory;
 use SixBySix\Port\Factory\ProductWriterFactory;
 
 /**
- * Class ProductWriterFactoryTest
- * @package SixBySix\PortTest\Factory
+ * Class ProductWriterFactoryTest.
+ *
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class ProductWriterFactoryTest extends \PHPUnit_Framework_TestCase
+final class ProductWriterFactoryTest extends \PHPUnit\Framework\TestCase
 {
     public function testFactoryReturnsInstance()
     {
-        $factory = new ProductWriterFactory;
-        $this->assertInstanceOf('\SixBySix\Port\Writer\ProductWriter', $factory->__invoke(
-            $this->getMock('\Psr\Log\LoggerInterface')
+        $factory = new ProductWriterFactory();
+        $this->assertInstanceOf('\SixBySix\Port\Writer\Product', $factory->__invoke(
+            $this->createMock('\Psr\Log\LoggerInterface')
         ));
     }
 }

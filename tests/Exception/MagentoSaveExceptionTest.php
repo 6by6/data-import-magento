@@ -5,10 +5,14 @@ namespace SixBySix\PortTest\Exception;
 use SixBySix\Port\Exception\MagentoSaveException;
 
 /**
- * Class MagentoSaveExceptionTest
+ * Class MagentoSaveExceptionTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class MagentoSaveExceptionTest extends \PHPUnit_Framework_TestCase
+final class MagentoSaveExceptionTest extends \PHPUnit\Framework\TestCase
 {
     public function testException()
     {

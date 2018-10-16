@@ -2,24 +2,25 @@
 
 namespace SixBySix\PortTest\Writer;
 
-use SixBySix\Port\Writer\ShipmentWriter;
-use SixBySix\Port\Writer\ProductWriter;
+use SixBySix\Port\Writer\Shipment;
 
 /**
- * Class ShipmentWriterTest
- * @package SixBySix\PortTest\Writer
+ * Class ShipmentTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
+final class ShipmentTest extends \PHPUnit\Framework\TestCase
 {
-
     protected $orderModel;
     protected $transactionResourceModel;
     protected $shipmentWriter;
     protected $trackingModel;
     protected $options;
 
-    public function setUp()
+    protected function setUp()
     {
         $this->orderModel = $this->getMockBuilder('Mage_Sales_Model_Order')
             ->disableOriginalConstructor()
@@ -35,10 +36,10 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $this->options = [
-            'send_shipment_email' => 1
+            'send_shipment_email' => 1,
         ];
 
-        $this->shipmentWriter = new ShipmentWriter(
+        $this->shipmentWriter = new Shipment(
             $this->orderModel,
             $this->transactionResourceModel,
             $this->trackingModel,
@@ -48,7 +49,8 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
 
     public function testExceptionIsThrownIfNoOrderId()
     {
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', 'order_id must be set');
+        $this->expectException('Port\Exception\WriterException');
+        $this->expectExceptionMessage('order_id must be set');
         $this->shipmentWriter->writeItem([]);
     }
 
@@ -64,8 +66,10 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(null));
 
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\WriterException',
+        $this->expectException(
+            'Port\Exception\WriterException'
+        );
+        $this->expectExceptionMessage(
             'Order with ID: "5" cannot be found'
         );
         $this->shipmentWriter->writeItem(['order_id' => 5]);
@@ -83,7 +87,7 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $shipment = $this->getMock('Mage_Sales_Model_Order_Shipment');
+        $shipment = $this->createMock('Mage_Sales_Model_Order_Shipment');
 
         $this->orderModel
             ->expects($this->once())
@@ -130,10 +134,10 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with(
                 [
-                    'title'         => 'Test Carrier',
-                    'number'        => '782773742',
-                    'carrier_code'  => 'custom',
-                    'order_id'      => 5
+                    'title' => 'Test Carrier',
+                    'number' => '782773742',
+                    'carrier_code' => 'custom',
+                    'order_id' => 5,
                 ]
             );
 
@@ -145,25 +149,25 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             [
                 'tracks' => [
                     0 => [
-                        'carrier'           => 'Test Carrier',
-                        'tracking_number'   => '782773742'
-                    ]
+                        'carrier' => 'Test Carrier',
+                        'tracking_number' => '782773742',
+                    ],
                 ],
                 'items' => [
                     'items' => [
                         0 => [
-                            'LineNo'    => 70000,
-                            'SKU'       => 'FILAM317RL1',
-                            'Qty'       => 1
+                            'LineNo' => 70000,
+                            'SKU' => 'FILAM317RL1',
+                            'Qty' => 1,
                         ],
                         1 => [
-                            'LineNo'    => 70001,
-                            'SKU'       => 'FILAM317RL2',
-                            'Qty'       => 1
-                        ]
-                    ]
+                            'LineNo' => 70001,
+                            'SKU' => 'FILAM317RL2',
+                            'Qty' => 1,
+                        ],
+                    ],
                 ],
-                'order_id' => 5
+                'order_id' => 5,
             ]
         );
     }
@@ -180,7 +184,7 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $shipment = $this->getMock('Mage_Sales_Model_Order_Shipment');
+        $shipment = $this->createMock('Mage_Sales_Model_Order_Shipment');
 
         $this->orderModel
             ->expects($this->once())
@@ -206,7 +210,6 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('addObject')
             ->with($shipment)
             ->will($this->returnSelf());
-
 
         $this->transactionResourceModel
             ->expects($this->at(1))
@@ -228,10 +231,10 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('setData')
             ->with(
                 [
-                    'title'         => 'Test Carrier',
-                    'number'        => '782773742',
-                    'carrier_code'  => 'custom',
-                    'order_id'      => 5
+                    'title' => 'Test Carrier',
+                    'number' => '782773742',
+                    'carrier_code' => 'custom',
+                    'order_id' => 5,
                 ]
             );
 
@@ -244,25 +247,24 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
                 'items' => [
                     'items' => [
                         0 => [
-                            'LineNo'    => 70000,
-                            'SKU'       => 'FILAM317RL1',
-                            'Qty'       => 1
+                            'LineNo' => 70000,
+                            'SKU' => 'FILAM317RL1',
+                            'Qty' => 1,
                         ],
                         1 => [
-                            'LineNo'    => 70001,
-                            'SKU'       => 'FILAM317RL2',
-                            'Qty'       => 1
-                        ]
-                    ]
+                            'LineNo' => 70001,
+                            'SKU' => 'FILAM317RL2',
+                            'Qty' => 1,
+                        ],
+                    ],
                 ],
-                'order_id' => 5
+                'order_id' => 5,
             ]
         );
     }
 
     public function testMagentoSaveExceptionIsThrownIfSaveFails()
     {
-
         $this->orderModel
             ->expects($this->once())
             ->method('loadByIncrementId')
@@ -273,7 +275,7 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $shipment = $this->getMock('Mage_Sales_Model_Order_Shipment');
+        $shipment = $this->createMock('Mage_Sales_Model_Order_Shipment');
 
         $this->orderModel
             ->expects($this->once())
@@ -300,20 +302,20 @@ class ShipmentWriterTest extends \PHPUnit_Framework_TestCase
             ->with($shipment)
             ->will($this->returnSelf());
 
-
         $this->transactionResourceModel
             ->expects($this->at(1))
             ->method('addObject')
             ->with($this->orderModel)
             ->will($this->returnSelf());
 
-        $e = new \Mage_Core_Exception("Save Failed");
+        $e = new \Mage_Core_Exception('Save Failed');
         $this->transactionResourceModel
             ->expects($this->once())
             ->method('save')
             ->will($this->throwException($e));
 
-        $this->setExpectedException('SixBySix\Port\Exception\MagentoSaveException', 'Save Failed');
+        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
+        $this->expectExceptionMessage('Save Failed');
         $this->shipmentWriter->writeItem(['order_id' => 5]);
     }
 }

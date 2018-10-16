@@ -1,17 +1,18 @@
 <?php
+
 namespace SixBySix\Port\Writer;
 
-use Ddeboer\DataImport\Writer\AbstractWriter;
+use Port\Writer;
 use SixBySix\Port\Exception\MagentoSaveException;
 
 /**
- * Class MagentoCustomerWriter
+ * Class MagentoCustomerWriter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
- * @package SixBySix\Port\Writer
  */
-class CustomerWriter extends AbstractWriter
+class CustomerWriter implements Writer
 {
-
     /**
      * @var \Mage_Customer_Model_Customer
      */
@@ -25,16 +26,16 @@ class CustomerWriter extends AbstractWriter
     /**
      * @var array
      */
-    protected $regions = null;
+    protected $regions;
 
     /**
      * @var array
      */
-    protected $regionLookUpErrors = array();
+    protected $regionLookUpErrors = [];
 
     /**
-     * @param \Mage_Customer_Model_Customer $customerModel
-     * @param \Mage_Customer_Model_Address $addressModel
+     * @param \Mage_Customer_Model_Customer                    $customerModel
+     * @param \Mage_Customer_Model_Address                     $addressModel
      * @param \Mage_Directory_Model_Resource_Region_Collection $regions
      */
     public function __construct(
@@ -42,20 +43,21 @@ class CustomerWriter extends AbstractWriter
         \Mage_Customer_Model_Address $addressModel = null,
         \Mage_Directory_Model_Resource_Region_Collection $regions = null
     ) {
-        $this->customerModel    = $customerModel;
-        $this->addressModel     = $addressModel;
+        $this->customerModel = $customerModel;
+        $this->addressModel = $addressModel;
 
         //load countries and regions
         if ($this->addressModel && $regions) {
             $this->regions = $this->processRegions($regions);
         }
-
     }
 
     /**
      * @param array $item
-     * @return $this
+     *
      * @throws MagentoSaveException
+     *
+     * @return $this
      */
     public function writeItem(array $item)
     {
@@ -77,7 +79,7 @@ class CustomerWriter extends AbstractWriter
                 //lookup region info:
                 $name = '';
                 if (isset($addressData['firstname']) && $addressData['lastname']) {
-                    $name = $addressData['firstname'] . " " . $addressData['lastname'];
+                    $name = $addressData['firstname'].' '.$addressData['lastname'];
                 }
 
                 $regionId = false;
@@ -104,7 +106,7 @@ class CustomerWriter extends AbstractWriter
         } catch (\Mage_Core_Exception $e) {
             $message = $e->getMessage();
             if (isset($item['email'])) {
-                $message .= " : " . $item['email'];
+                $message .= ' : '.$item['email'];
             }
 
             throw new MagentoSaveException($message);
@@ -115,30 +117,32 @@ class CustomerWriter extends AbstractWriter
 
     /**
      * @param \Mage_Directory_Model_Resource_Region_Collection $regions
+     *
      * @return array
      */
     public function processRegions(\Mage_Directory_Model_Resource_Region_Collection $regions)
     {
-        $sortedRegions = array();
+        $sortedRegions = [];
         foreach ($regions as $region) {
             $countryId = $region->getData('country_id');
             if (!isset($sortedRegions[$countryId])) {
-                $sortedRegions[$countryId] = array(
-                    strtolower($region->getData('name')) => $region->getId()
-                );
+                $sortedRegions[$countryId] = [
+                    strtolower($region->getData('name')) => $region->getId(),
+                ];
             } else {
                 $sortedRegions[$countryId][strtolower($region->getData('name'))] = $region->getId();
             }
         }
+
         return $sortedRegions;
     }
-
 
     /**
      * @param string $regionText
      * @param string $countryId
      * @param string $name
-     * @return int|bool
+     *
+     * @return bool|int
      */
     public function lookUpRegion($regionText, $countryId, $name)
     {
@@ -146,12 +150,27 @@ class CustomerWriter extends AbstractWriter
         if (isset($this->regions[$countryId])) {
             if (isset($this->regions[$countryId][strtolower($regionText)])) {
                 return $this->regions[$countryId][strtolower($regionText)];
-            } else {
-                $this->regionLookUpErrors[]
-                    = "Customer '$name' has region '$regionText' from country '$countryId'. NOT FOUND";
             }
+            $this->regionLookUpErrors[]
+                    = "Customer '${name}' has region '${regionText}' from country '${countryId}'. NOT FOUND";
         }
 
         return false;
+    }
+
+    /**
+     * Prepare the writer before writing the items.
+     */
+    public function prepare()
+    {
+        return $this;
+    }
+
+    /**
+     * Wrap up the writer after all items have been written.
+     */
+    public function finish()
+    {
+        return $this;
     }
 }

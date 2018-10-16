@@ -2,30 +2,39 @@
 
 namespace SixBySix\Port\Writer;
 
-use Ddeboer\DataImport\Exception\WriterException;
-use Ddeboer\DataImport\Writer\AbstractWriter;
-use Guzzle\Common\Exception\InvalidArgumentException;
+use Port\Exception\WriterException;
+use Port\Writer;
 use SixBySix\Port\Exception\MagentoSaveException;
 use SixBySix\Port\Options\OptionsParseTrait;
 
 /**
- * Class InventoryUpdateWriter
+ * Class InventoryUpdateWriter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
- * @package SixBySix\Port\Writer
  */
-class InventoryUpdateWriter extends AbstractWriter
+class InventoryUpdateWriter implements Writer
 {
     use OptionsParseTrait;
 
     /**
-     * Whether to add qty to existing qty
+     * Whether to add qty to existing qty.
      */
     const STOCK_UPDATE_TYPE_ADD = 'add';
 
     /**
-     * Whether to set qty and override current
+     * Whether to set qty and override current.
      */
     const STOCK_UPDATE_TYPE_SET = 'set';
+
+    /**
+     * @var array
+     */
+    protected $options = [
+        'productIdField' => 'sku',
+        'stockUpdateType' => self::STOCK_UPDATE_TYPE_SET,
+        'updateStockStatusIfInStock' => true,
+    ];
 
     /**
      * @var \Mage_Catalog_Model_Product
@@ -33,21 +42,12 @@ class InventoryUpdateWriter extends AbstractWriter
     private $productModel;
 
     /**
-     * @var array
-     */
-    protected $options = [
-        'productIdField'                => 'sku',
-        'stockUpdateType'               => self::STOCK_UPDATE_TYPE_SET,
-        'updateStockStatusIfInStock'    => true
-    ];
-
-    /**
      * @param \Mage_Catalog_Model_Product $productModel
-     * @param array $options
+     * @param array                       $options
      */
     public function __construct(
         \Mage_Catalog_Model_Product $productModel,
-        array $options = array()
+        array $options = []
     ) {
         $this->productModel = $productModel;
         $this->setOptions($options);
@@ -60,8 +60,8 @@ class InventoryUpdateWriter extends AbstractWriter
     {
         if (isset($options['stockUpdateType'])) {
             //check the type passed in, is actually type we support
-            if ($options['stockUpdateType'] !== self::STOCK_UPDATE_TYPE_SET
-                && $options['stockUpdateType'] !== self::STOCK_UPDATE_TYPE_ADD
+            if (self::STOCK_UPDATE_TYPE_SET !== $options['stockUpdateType']
+                && self::STOCK_UPDATE_TYPE_ADD !== $options['stockUpdateType']
             ) {
                 throw new \InvalidArgumentException(
                     sprintf("'%s' is not a valid value for 'stockUpdateType'", $options['stockUpdateType'])
@@ -81,14 +81,16 @@ class InventoryUpdateWriter extends AbstractWriter
 
     /**
      * @param array $item
-     * @return \Ddeboer\DataImport\Writer\WriterInterface
-     * @throws \Ddeboer\DataImport\Exception\WriterException
+     *
+     * @throws \Port\Exception\WriterException
      * @throws \SixBySix\Port\Exception\MagentoSaveException
+     *
+     * @return \Ddeboer\DataImport\Writer\WriterInterface
      */
     public function writeItem(array $item)
     {
         if (!isset($item['product_id'])) {
-            throw new WriterException("No product Id Found");
+            throw new WriterException('No product Id Found');
         }
 
         $id = $item['product_id'];
@@ -110,11 +112,13 @@ class InventoryUpdateWriter extends AbstractWriter
                         sprintf('Product not found with SKU: "%s"', $id)
                     );
                 }
+
                 break;
             case 'id':
             default:
                 //default to assume just using product_id
                 $productId = $id;
+
                 break;
         }
 
@@ -124,9 +128,11 @@ class InventoryUpdateWriter extends AbstractWriter
         switch ($this->options['stockUpdateType']) {
             case self::STOCK_UPDATE_TYPE_ADD:
                 $stockItem->setData('qty', $stockItem->getData('qty') + $item['qty']);
+
                 break;
             case self::STOCK_UPDATE_TYPE_SET:
                 $stockItem->setData('qty', $item['qty']);
+
                 break;
         }
 
@@ -143,6 +149,14 @@ class InventoryUpdateWriter extends AbstractWriter
             throw new MagentoSaveException($e);
         }
 
+        return $this;
+    }
+
+    /**
+     * Wrap up the writer after all items have been written.
+     */
+    public function finish()
+    {
         return $this;
     }
 }

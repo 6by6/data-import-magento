@@ -2,25 +2,23 @@
 
 namespace SixBySix\Port\ValueConverter;
 
-use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
-use Ddeboer\DataImport\Exception\UnexpectedValueException;
+use Port\Exception\UnexpectedValueException;
 use SixBySix\Port\Options\OptionsParseTrait;
 
 /**
- * Load the real Option Label for a given ID
+ * Load the real Option Label for a given ID.
  *
- * Class AttributeOptionValueConverter
- * @package SixBySix\Port\ValueConverter
+ * @@author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class AttributeOptionValueConverter implements ValueConverterInterface
+class AttributeOption
 {
     use OptionsParseTrait;
 
     /**
-     * @var string|null
+     * @var null|string
      */
-    protected $attributeCode = null;
+    protected $attributeCode;
 
     /**
      * @var array
@@ -36,18 +34,22 @@ class AttributeOptionValueConverter implements ValueConverterInterface
 
     /**
      * @param array $options
+     * @param mixed $attributeCode
+     * @param mixed $attributeOptions
      */
     public function __construct($attributeCode, $attributeOptions = [], $options = [])
     {
-        $this->attributeCode    = $attributeCode;
+        $this->attributeCode = $attributeCode;
         $this->attributeOptions = $attributeOptions;
-        $this->options          = $this->parseOptions($this->options, $options);
+        $this->options = $this->parseOptions($this->options, $options);
     }
 
     /**
      * @param mixed $input
-     * @return mixed
+     *
      * @throws UnexpectedValueException
+     *
+     * @return mixed
      */
     public function convert($input)
     {
@@ -60,9 +62,9 @@ class AttributeOptionValueConverter implements ValueConverterInterface
                         $this->attributeCode
                     )
                 );
-            } else {
-                return '';
             }
+
+            return '';
         }
         //look up the real option value
         return $this->attributeOptions[$input];

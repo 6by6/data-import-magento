@@ -5,11 +5,14 @@ namespace SixBySix\PortTest\Writer;
 use SixBySix\Port\Writer\InventoryUpdateWriter;
 
 /**
- * Class InventoryUpdateWriterTest
- * @package SixBySix\PortTest\Writer
+ * Class InventoryUpdateWriterTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
+final class InventoryUpdateWriterTest extends \PHPUnit\Framework\TestCase
 {
     protected $inventoryUpdateWriter;
 
@@ -17,12 +20,12 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
 
     protected $productModel;
 
-    protected $options = array();
+    protected $options = [];
 
-    public function setUp()
+    protected function setUp()
     {
-        $this->stockItemModel   = $this->getMock('\Mage_CatalogInventory_Model_Stock_Item');
-        $this->productModel     = $this->getMockBuilder('\Mage_Catalog_Model_Product')
+        $this->stockItemModel = $this->createMock('\Mage_CatalogInventory_Model_Stock_Item');
+        $this->productModel = $this->getMockBuilder('\Mage_Catalog_Model_Product')
             ->disableOriginalConstructor()
             ->getMock();
     }
@@ -35,12 +38,13 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
         return new InventoryUpdateWriter($this->productModel, $this->options);
     }
 
-
     public function testCannotSetUnrecognizedUpdateType()
     {
         $this->options['stockUpdateType'] = 'notatype';
-        $this->setExpectedException(
-            '\InvalidArgumentException',
+        $this->expectException(
+            '\InvalidArgumentException'
+        );
+        $this->expectExceptionMessage(
             "'notatype' is not a valid value for 'stockUpdateType'"
         );
 
@@ -60,12 +64,17 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @dataProvider necessaryFieldsProvider
+     *
+     * @param mixed $field
+     * @param mixed $data
+     * @param mixed $message
      */
     public function testExceptionIsThrownIfNecessaryFieldsNotFoundInData($field, $data, $message)
     {
         $writer = $this->getInventoryWriter();
 
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', $message);
+        $this->expectException('Port\Exception\WriterException');
+        $this->expectExceptionMessage($message);
         $writer->writeItem($data);
     }
 
@@ -91,7 +100,8 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
         $writer = $this->getInventoryWriter();
 
         $message = 'Product not found with SKU: "PROD1234"';
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', $message);
+        $this->expectException('Port\Exception\WriterException');
+        $this->expectExceptionMessage($message);
         $writer->writeItem($data);
     }
 
@@ -205,13 +215,14 @@ class InventoryUpdateWriterTest extends \PHPUnit_Framework_TestCase
             ->with('stock_item')
             ->will($this->returnValue($this->stockItemModel));
 
-        $e = new \Mage_Customer_Exception("Save Failed");
+        $e = new \Mage_Customer_Exception('Save Failed');
         $this->stockItemModel
             ->expects($this->once())
             ->method('save')
             ->will($this->throwException($e));
 
-        $this->setExpectedException('SixBySix\Port\Exception\MagentoSaveException', 'Save Failed');
+        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
+        $this->expectExceptionMessage('Save Failed');
         $writer = $this->getInventoryWriter();
         $writer->writeItem($data);
     }

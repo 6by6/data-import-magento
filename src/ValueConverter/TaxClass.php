@@ -2,18 +2,16 @@
 
 namespace SixBySix\Port\ValueConverter;
 
-use Ddeboer\DataImport\Exception\UnexpectedTypeException;
-use Ddeboer\DataImport\Exception\UnexpectedValueException;
-use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
+use Port\Exception\UnexpectedValueException;
 
 /**
- * Class TaxClassValueConverter
- * @package SixBySix\Port\ValueConverter
+ * Class TaxClass.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class TaxClassValueConverter implements ValueConverterInterface
+class TaxClass
 {
-
     /**
      * @var array
      */
@@ -25,7 +23,7 @@ class TaxClassValueConverter implements ValueConverterInterface
     private $default = 'Taxable Goods';
 
     /**
-     *  Get the Tax Classes
+     *  Get the Tax Classes.
      */
     public function __construct()
     {
@@ -38,6 +36,7 @@ class TaxClassValueConverter implements ValueConverterInterface
 
     /**
      * @param string $input
+     *
      * @return string
      */
     public function convert($input)
@@ -46,7 +45,7 @@ class TaxClassValueConverter implements ValueConverterInterface
             $input = $this->default;
         }
 
-        if (!in_array($input, $this->taxClasses)) {
+        if (!\in_array($input, $this->taxClasses, true)) {
             throw new UnexpectedValueException(
                 sprintf(
                     'Given Tax-Class: "%s" is not valid. Allowed values: "%s"',
@@ -56,6 +55,6 @@ class TaxClassValueConverter implements ValueConverterInterface
             );
         }
 
-        return array_search($input, $this->taxClasses);
+        return array_search($input, $this->taxClasses, true);
     }
 }

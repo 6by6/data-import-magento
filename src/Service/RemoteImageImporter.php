@@ -6,31 +6,32 @@ use Mage_Core_Exception;
 use RuntimeException;
 
 /**
- * Class RemoteImageImporter
- * @package SixBySix\Port\Service
+ * Class RemoteImageImporter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
  */
 class RemoteImageImporter
 {
-
     /**
      * @param \Mage_Catalog_Model_Product $product
      * @param string                      $url
+     *
      * @throws RuntimeException
      */
     public function importImage(\Mage_Catalog_Model_Product $product, $url)
     {
-        $url       = trim($url);
+        $url = trim($url);
         $extension = pathinfo($url, PATHINFO_EXTENSION);
-        $fileName  = sprintf('%s.%s', md5(sprintf('%s-%s', basename($url), $product->getSku())), $extension);
-        $filePath  = sprintf('%s/import/%s', \Mage::getBaseDir('media'), $fileName);
+        $fileName = sprintf('%s.%s', md5(sprintf('%s-%s', basename($url), $product->getSku())), $extension);
+        $filePath = sprintf('%s/import/%s', \Mage::getBaseDir('media'), $fileName);
 
-        if (!is_dir(dirname($filePath))) {
-            mkdir(dirname($filePath), 0755, true);
+        if (!is_dir(\dirname($filePath))) {
+            mkdir(\dirname($filePath), 0755, true);
         }
 
         $data = @file_get_contents($url);
-        if ($data == false) {
+        if (false === $data) {
             throw new RuntimeException(sprintf('URL returned nothing: "%s"', $url));
         }
 
@@ -39,7 +40,7 @@ class RemoteImageImporter
         $mediaAttribute = [
             'thumbnail',
             'small_image',
-            'image'
+            'image',
         ];
 
         try {

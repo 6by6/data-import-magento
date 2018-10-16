@@ -3,21 +3,22 @@
 namespace SixBySix\PortTest\Writer;
 
 use SixBySix\Port\Writer\InvoiceWriter;
-use SixBySix\Port\Writer\ProductWriter;
 
 /**
- * Class InvoiceWriterTest
- * @package SixBySix\PortTest\Writer
+ * Class InvoiceWriterTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
+final class InvoiceWriterTest extends \PHPUnit\Framework\TestCase
 {
-
     protected $orderModel;
     protected $transactionResourceModel;
     protected $invoiceWriter;
 
-    public function setUp()
+    protected function setUp()
     {
         $this->orderModel = $this->getMockBuilder('Mage_Sales_Model_Order')
             ->disableOriginalConstructor()
@@ -33,7 +34,8 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
 
     public function testExceptionIsThrownIfNoOrderId()
     {
-        $this->setExpectedException('Ddeboer\DataImport\Exception\WriterException', 'order_id must be set');
+        $this->expectException('Port\Exception\WriterException');
+        $this->expectExceptionMessage('order_id must be set');
         $this->invoiceWriter->writeItem([]);
     }
 
@@ -49,8 +51,10 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(null));
 
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\WriterException',
+        $this->expectException(
+            'Port\Exception\WriterException'
+        );
+        $this->expectExceptionMessage(
             'Order with ID: "5" cannot be found'
         );
         $this->invoiceWriter->writeItem(['order_id' => 5]);
@@ -68,7 +72,7 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $invoice = $this->getMock('Mage_Sales_Model_Order_Invoice');
+        $invoice = $this->createMock('Mage_Sales_Model_Order_Invoice');
         $invoice
             ->expects($this->once())
             ->method('getData')
@@ -80,8 +84,10 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->method('prepareInvoice')
             ->will($this->returnValue($invoice));
 
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\WriterException',
+        $this->expectException(
+            'Port\Exception\WriterException'
+        );
+        $this->expectExceptionMessage(
             'Cannot create invoice without products. Order ID: "5"'
         );
         $this->invoiceWriter->writeItem(['order_id' => 5]);
@@ -99,7 +105,7 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $invoice = $this->getMock('Mage_Sales_Model_Order_Invoice');
+        $invoice = $this->createMock('Mage_Sales_Model_Order_Invoice');
         $invoice
             ->expects($this->once())
             ->method('getData')
@@ -156,7 +162,7 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getId')
             ->will($this->returnValue(5));
 
-        $invoice = $this->getMock('Mage_Sales_Model_Order_Invoice');
+        $invoice = $this->createMock('Mage_Sales_Model_Order_Invoice');
         $invoice
             ->expects($this->once())
             ->method('getData')
@@ -190,7 +196,7 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->with($this->orderModel)
             ->will($this->returnSelf());
 
-        $e = new \Mage_Core_Exception("Save Failed");
+        $e = new \Mage_Core_Exception('Save Failed');
         $this->transactionResourceModel
             ->expects($this->once())
             ->method('save')
@@ -200,7 +206,8 @@ class InvoiceWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('register');
 
-        $this->setExpectedException('SixBySix\Port\Exception\MagentoSaveException', 'Save Failed');
+        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
+        $this->expectExceptionMessage('Save Failed');
         $this->invoiceWriter->writeItem(['order_id' => 5]);
     }
 }

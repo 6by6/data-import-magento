@@ -2,14 +2,15 @@
 
 namespace SixBySix\Port\Exception;
 
-use Ddeboer\DataImport\Exception\ExceptionInterface;
 use Exception;
+use Port\Exception as PortException;
 
 /**
- * Class MagentoSaveException
- * @package SixBySix\Port\Exception
+ * Exception thrown when error occurs saving entity.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class MagentoSaveException extends Exception implements ExceptionInterface
+class MagentoSaveException extends Exception implements PortException
 {
 }

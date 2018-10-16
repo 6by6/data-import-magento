@@ -1,17 +1,19 @@
 <?php
+
 namespace SixBySix\Port\Writer;
 
-use Ddeboer\DataImport\Exception\WriterException;
-use Ddeboer\DataImport\Writer\AbstractWriter;
+use Port\Exception\WriterException;
+use Port\Writer;
 use SixBySix\Port\Exception\MagentoSaveException;
 
 /**
- * Class InvoiceWriter
- * @package SixBySix\Port\Writer
+ * Class InvoiceWriter.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Adam Paterson <adam@wearejh.com>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class InvoiceWriter extends AbstractWriter
+class InvoiceWriter implements Writer
 {
     /**
      * @var \Mage_Core_Model_Resource_Transaction
@@ -25,25 +27,26 @@ class InvoiceWriter extends AbstractWriter
 
     /**
      * @param \Mage_Core_Model_Resource_Transaction $transactionResourceModel
-     * @param \Mage_Sales_Model_Order $order
+     * @param \Mage_Sales_Model_Order               $order
      */
     public function __construct(
         \Mage_Core_Model_Resource_Transaction $transactionResourceModel,
         \Mage_Sales_Model_Order $order
     ) {
         $this->transactionResourceModel = $transactionResourceModel;
-        $this->orderModel               = $order;
+        $this->orderModel = $order;
     }
 
     /**
      * @param array $item
-     * @return \Ddeboer\DataImport\Writer\WriterInterface|void
-     * @throws \Ddeboer\DataImport\Exception\WriterException
+     *
+     * @throws \Port\Exception\WriterException
      * @throws \SixBySix\Port\Exception\MagentoSaveException
+     *
+     * @return \Ddeboer\DataImport\Writer\WriterInterface|void
      */
     public function writeItem(array $item)
     {
-
         if (!isset($item['order_id'])) {
             throw new WriterException('order_id must be set');
         }
@@ -55,7 +58,7 @@ class InvoiceWriter extends AbstractWriter
             throw new WriterException(sprintf('Order with ID: "%s" cannot be found', $item['order_id']));
         }
 
-        /* @var $invoice Mage_Sales_Model_Order_Invoice */
+        /** @var $invoice Mage_Sales_Model_Order_Invoice */
         $invoice = $order->prepareInvoice();
 
         if (!$invoice->getData('total_qty')) {
@@ -74,9 +77,24 @@ class InvoiceWriter extends AbstractWriter
                 ->addObject($invoice)
                 ->addObject($invoice->getOrder())
                 ->save();
-
         } catch (\Exception $e) {
             throw new MagentoSaveException($e->getMessage());
         }
+    }
+
+    /**
+     * Prepare the writer before writing the items.
+     */
+    public function prepare()
+    {
+        return $this;
+    }
+
+    /**
+     * Wrap up the writer after all items have been written.
+     */
+    public function finish()
+    {
+        return $this;
     }
 }

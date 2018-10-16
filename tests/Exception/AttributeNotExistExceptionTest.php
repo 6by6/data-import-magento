@@ -5,10 +5,14 @@ namespace SixBySix\PortTest\Exception;
 use SixBySix\Port\Exception\AttributeNotExistException;
 
 /**
- * Class AttributeNotExistExceptionTest
+ * Class AttributeNotExistExceptionTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class AttributeNotExistExceptionTest extends \PHPUnit_Framework_TestCase
+final class AttributeNotExistExceptionTest extends \PHPUnit\Framework\TestCase
 {
     public function testException()
     {

@@ -5,11 +5,14 @@ namespace SixBySix\PortTest\Service;
 use SixBySix\Port\Service\RemoteImageImporter;
 
 /**
- * Class RemoteImageImporterTest
- * @package SixBySix\PortTest\Service
+ * Class RemoteImageImporterTest.
+ *
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
+final class RemoteImageImporterTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var RemoteImageImporter
@@ -21,17 +24,17 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
      */
     private $product;
 
-    public function setup()
+    protected function setup()
     {
-        $this->importer = new RemoteImageImporter;
+        $this->importer = new RemoteImageImporter();
         $this->product = $this->getMock('\Mage_Catalog_Model_Product', [], [], '', false);
     }
 
     public function testImportImage()
     {
-        $url  = __DIR__ . '/../Fixtures/honey.jpg';
-        $path = realpath(__DIR__ . '/../../../');
-        $path .= '/vendor/wearejh/magento-ce/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
+        $url = __DIR__.'/../Fixtures/honey.jpg';
+        $path = realpath(__DIR__.'/../../');
+        $path .= '/vendor/firegento/magento/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
 
         $this->product
             ->expects($this->once())
@@ -53,24 +56,23 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
             ->with($this->product);
 
         $this->importer->importImage($this->product, $url);
-
-        unlink($path);
-        rmdir(dirname($path));
     }
 
     public function testImportThrowsExceptionIfImageFailsToDownload()
     {
-        $url = 'http://www.notaurl.lol';
-        $this->setExpectedException('RuntimeException', 'URL returned nothing: "http://www.notaurl.lol"');
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('URL returned nothing: "notaurl"');
+
+        $url = 'notaurl';
 
         $this->importer->importImage($this->product, $url);
     }
 
     public function testImportThrowsExceptionIfImageFailsToImport()
     {
-        $url  = __DIR__ . '/../Fixtures/honey.jpg';
-        $path = realpath(__DIR__ . '/../../../');
-        $path .= '/vendor/wearejh/magento-ce/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
+        $url = __DIR__.'/../Fixtures/honey.jpg';
+        $path = realpath(__DIR__.'/../../');
+        $path .= '/vendor/firegento/magento/media/import/efba9ed5cc7df0bb6fc031bde060ffd4.jpg';
 
         $this->product
             ->expects($this->once())
@@ -92,10 +94,11 @@ class RemoteImageImporterTest extends \PHPUnit_Framework_TestCase
             ->with($this->product)
             ->will($this->throwException(new \Mage_Core_Exception('nahhhh')));
 
-        $this->setExpectedException('RuntimeException', 'nahhhh');
+        $this->expectException('RuntimeException');
+        $this->expectExceptionMessage('nahhhh');
         $this->importer->importImage($this->product, $url);
 
         unlink($path);
-        rmdir(dirname($path));
+        rmdir(\dirname($path));
     }
 }

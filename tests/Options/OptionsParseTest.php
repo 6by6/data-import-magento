@@ -3,15 +3,18 @@
 namespace SixBySix\PortTest\Options;
 
 /**
- * Class OptionsParseTest
- * @package SixBySix\PortTest\Options
+ * Class OptionsParseTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class OptionsParseTest extends \PHPUnit_Framework_TestCase
+final class OptionsParseTest extends \PHPUnit\Framework\TestCase
 {
     protected $optionsTrait;
 
-    public function setUp()
+    protected function setUp()
     {
         $this->optionsTrait = $this->getMockForTrait('SixBySix\Port\Options\OptionsParseTrait');
     }
@@ -23,33 +26,34 @@ class OptionsParseTest extends \PHPUnit_Framework_TestCase
         ];
 
         $options = [
-            'thisShouldBeAccepted'  => 'someOption',
-            'shouldNotBeAccepted'   => 'notHere',
-            'neitherShouldI'        => 'setMe',
+            'thisShouldBeAccepted' => 'someOption',
+            'shouldNotBeAccepted' => 'notHere',
+            'neitherShouldI' => 'setMe',
         ];
 
         $message = "'shouldNotBeAccepted', 'neitherShouldI' are not accepted options";
-        $this->setExpectedException('\InvalidArgumentException', $message);
+        $this->expectException('\InvalidArgumentException');
+        $this->expectExceptionMessage($message);
         $this->optionsTrait->parseOptions($acceptedOptions, $options);
     }
 
     public function testDefaultOptionsExist()
     {
         $acceptedOptions = [
-            'thisShouldBeAccepted' => 'someCoolOption'
+            'thisShouldBeAccepted' => 'someCoolOption',
         ];
 
         $res = $this->optionsTrait->parseOptions($acceptedOptions, []);
-        $this->assertEquals($acceptedOptions, $res);
+        $this->assertSame($acceptedOptions, $res);
     }
 
     public function testCanOverWriteDefaultOption()
     {
         $acceptedOptions = [
-            'productIdField' => 'sku'
+            'productIdField' => 'sku',
         ];
 
         $res = $this->optionsTrait->parseOptions($acceptedOptions, ['productIdField' => 'item_id']);
-        $this->assertEquals(['productIdField' => 'item_id'], $res);
+        $this->assertSame(['productIdField' => 'item_id'], $res);
     }
 }

@@ -5,13 +5,15 @@ namespace SixBySix\PortTest\Writer;
 use SixBySix\Port\Writer\OrderWriter;
 
 /**
- * Class OrderWriterTest
- * @package SixBySix\PortTest\Writer
+ * Class OrderWriterTest.
+ *
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class OrderWriterTest extends \PHPUnit_Framework_TestCase
+final class OrderWriterTest extends \PHPUnit\Framework\TestCase
 {
-
     protected $quote;
     protected $convertQuote;
     protected $customer;
@@ -19,13 +21,13 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
     protected $quoteItem;
     protected $writer;
 
-    public function setUp()
+    protected function setUp()
     {
-        $this->quote        = $this->getMockModel('\Mage_Sales_Model_Quote');
+        $this->quote = $this->getMockModel('\Mage_Sales_Model_Quote');
         $this->convertQuote = $this->getMockModel('\Mage_Sales_Model_Convert_Quote');
-        $this->customer     = $this->getMockModel('\Mage_Customer_Model_Customer');
-        $this->product      = $this->getMockModel('\Mage_Catalog_Model_Product');
-        $this->quoteItem    = $this->getMockModel('\Mage_Sales_Model_Quote_Item', true);
+        $this->customer = $this->getMockModel('\Mage_Customer_Model_Customer');
+        $this->product = $this->getMockModel('\Mage_Catalog_Model_Product');
+        $this->quoteItem = $this->getMockModel('\Mage_Sales_Model_Quote_Item', true);
 
         $this->writer = new OrderWriter(
             $this->quote,
@@ -36,22 +38,12 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    protected function getMockModel($class, $disableClone = false)
-    {
-        $mockBuilder = $this->getMockBuilder($class)
-            ->disableOriginalConstructor();
-
-        if ($disableClone) {
-            $mockBuilder->disableOriginalClone();
-        }
-
-        return $mockBuilder->getMock();
-    }
-
     public function testExceptionIsThrownIfMappingAttributeOrPaymentMethodIsNotString()
     {
-        $this->setExpectedException(
-            'InvalidArgumentException',
+        $this->expectException(
+            'InvalidArgumentException'
+        );
+        $this->expectExceptionMessage(
             'Customer Mapping Attribute and Payment Method Code should be strings'
         );
 
@@ -61,7 +53,7 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             $this->customer,
             $this->product,
             $this->quoteItem,
-            new \stdClass
+            new \stdClass()
         );
     }
 
@@ -70,13 +62,13 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
         $orderMock = $this->getMockModel('\Mage_Sales_Model_Order');
         $item1 = new \Mage_Sales_Model_Order_Item();
         $item1->setData([
-           'price'          => 10,
-            'tax_amount'    => 20,
+            'price' => 10,
+            'tax_amount' => 20,
         ]);
         $item2 = new \Mage_Sales_Model_Order_Item();
         $item2->setData([
-            'price'         => 220,
-            'tax_amount'    => 20,
+            'price' => 220,
+            'tax_amount' => 20,
         ]);
 
         $orderMock
@@ -84,30 +76,30 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getAllItems')
             ->will($this->returnValue([
                 $item1,
-                $item2
+                $item2,
             ]));
 
-        $this->assertEquals(270, $this->writer->calculateSubTotal($orderMock));
+        $this->assertSame(270, $this->writer->calculateSubTotal($orderMock));
     }
 
     public function testCalculateGrandTotal()
     {
         $data = [
-            'shipping_amount'   => 20,
-            'gw_price'          => 15,
-            'discount_amount'   => 10,
+            'shipping_amount' => 20,
+            'gw_price' => 15,
+            'discount_amount' => 10,
         ];
 
         $orderMock = $this->getMockModel('\Mage_Sales_Model_Order');
         $item1 = new \Mage_Sales_Model_Order_Item();
         $item1->setData([
-            'price'          => 10,
-            'tax_amount'    => 20,
+            'price' => 10,
+            'tax_amount' => 20,
         ]);
         $item2 = new \Mage_Sales_Model_Order_Item();
         $item2->setData([
-            'price'         => 220,
-            'tax_amount'    => 20,
+            'price' => 220,
+            'tax_amount' => 20,
         ]);
 
         $orderMock
@@ -115,10 +107,10 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getAllItems')
             ->will($this->returnValue([
                 $item1,
-                $item2
+                $item2,
             ]));
 
-        $this->assertEquals(295, $this->writer->calculateGrandTotal($orderMock, $data));
+        $this->assertSame(295, $this->writer->calculateGrandTotal($orderMock, $data));
     }
 
     public function testAddProductsToQuote()
@@ -151,11 +143,11 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('addData')
             ->with([
-                'price'                 => 5,
-                'base_price'            => 5,
-                'original_price'        => 5,
-                'custom_price'          => 5,
-                'original_custom_price' => 5
+                'price' => 5,
+                'base_price' => 5,
+                'original_price' => 5,
+                'custom_price' => 5,
+                'original_custom_price' => 5,
             ]);
 
         $this->quote
@@ -177,8 +169,10 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('loadByAttribute')
             ->will($this->returnValue(null));
 
-        $this->setExpectedException(
-            'Ddeboer\DataImport\Exception\WriterException',
+        $this->expectException(
+            'Port\Exception\WriterException'
+        );
+        $this->expectExceptionMessage(
             'Product with SKU: SKU1 does not exist in Magento'
         );
 
@@ -187,9 +181,9 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
 
     public function testAddCustomerToQuoteWithNoDefaultAddress()
     {
-        $firstName  = 'Aydin';
-        $lastName   = 'Hassan';
-        $email      = 'aydin@hotmail.co.uk';
+        $firstName = 'Aydin';
+        $lastName = 'Hassan';
+        $email = 'aydin@hotmail.co.uk';
 
         $this->customer
             ->method('getData')
@@ -203,28 +197,27 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('addData')
             ->with([
-                'customer_firstname'    => $firstName,
-                'customer_lastname'     => $lastName,
-                'customer_email'        => $email,
+                'customer_firstname' => $firstName,
+                'customer_lastname' => $lastName,
+                'customer_email' => $email,
             ]);
 
         $addressData = [
-            'street'    => 'Some Street',
-            'city'      => 'Some City',
+            'street' => 'Some Street',
+            'city' => 'Some City',
         ];
-        $address = $this->getMock('Mage_Customer_Model_Address');
+        $address = $this->createMock('Mage_Customer_Model_Address');
         $address
             ->expects($this->any())
             ->method('getData')
             ->will($this->returnValue($addressData));
-
 
         $addressCollectionResource = $this->getMockModel('Mage_Customer_Model_Resource_Address_Collection');
         $addressCollectionResource
             ->expects($this->once())
             ->method('getFirstItem')
             ->will($this->returnValue($address));
-        
+
         $this->customer
             ->expects($this->once())
             ->method('getAddressesCollection')
@@ -256,9 +249,9 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
 
     public function testAddCustomerToQuoteWithDefaultAddress()
     {
-        $firstName  = 'Aydin';
-        $lastName   = 'Hassan';
-        $email      = 'aydin@hotmail.co.uk';
+        $firstName = 'Aydin';
+        $lastName = 'Hassan';
+        $email = 'aydin@hotmail.co.uk';
 
         $this->customer
             ->method('getData')
@@ -272,17 +265,16 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('addData')
             ->with([
-                'customer_firstname'    => $firstName,
-                'customer_lastname'     => $lastName,
-                'customer_email'        => $email,
+                'customer_firstname' => $firstName,
+                'customer_lastname' => $lastName,
+                'customer_email' => $email,
             ]);
 
-
         $addressData = [
-            'street'    => 'Some Street',
-            'city'      => 'Some City',
+            'street' => 'Some Street',
+            'city' => 'Some City',
         ];
-        $address = $this->getMock('Mage_Customer_Model_Address');
+        $address = $this->createMock('Mage_Customer_Model_Address');
         $address
             ->expects($this->any())
             ->method('getData')
@@ -324,8 +316,8 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
     public function testAddDetailsToQuote()
     {
         $data = [
-            'created_at'    => '12-04-1988',
-            'increment_id'  => '000001',
+            'created_at' => '12-04-1988',
+            'increment_id' => '000001',
         ];
 
         $payment = $this->getMockModel('Mage_Payment_Model_Method_Abstract');
@@ -340,17 +332,16 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getPayment')
             ->will($this->returnValue($payment));
 
-
         $this->quote
             ->expects($this->once())
             ->method('addData')
             ->with([
-                'created_at'          => $data['created_at'],
-                'reserved_order_id'   => $data['increment_id'],
+                'created_at' => $data['created_at'],
+                'reserved_order_id' => $data['increment_id'],
             ]);
 
-        $address = $this->getMock('Mage_Customer_Model_Address');
-        
+        $address = $this->createMock('Mage_Customer_Model_Address');
+
         $address
             ->expects($this->once())
             ->method('addData')
@@ -373,15 +364,15 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getCollection')
             ->will($this->returnValue($collection));
 
-        $attribute  = 'email';
-        $value      = 'aydin@hotmail.co.uk';
+        $attribute = 'email';
+        $value = 'aydin@hotmail.co.uk';
 
         $collection
             ->expects($this->once())
             ->method('addAttributeToFilter')
             ->with($attribute, $value)
             ->will($this->returnSelf());
-        
+
         $collection
             ->expects($this->once())
             ->method('addAttributeToSelect')
@@ -442,13 +433,13 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
 
         $item1 = new \Mage_Sales_Model_Order_Item();
         $item1->setData([
-            'price'          => 10,
-            'tax_amount'    => 20,
+            'price' => 10,
+            'tax_amount' => 20,
         ]);
         $item2 = new \Mage_Sales_Model_Order_Item();
         $item2->setData([
-            'price'         => 220,
-            'tax_amount'    => 20,
+            'price' => 220,
+            'tax_amount' => 20,
         ]);
 
         $order
@@ -456,7 +447,7 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getAllItems')
             ->will($this->returnValue([
                 $item1,
-                $item2
+                $item2,
             ]));
 
         $quoteItem = new \Mage_Sales_Model_Quote_Item();
@@ -468,13 +459,13 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->method('getAllItems')
             ->will($this->returnValue([$quoteItem]));
 
-        $payment = $this->getMock('Mage_Sales_Model_Quote_Payment');
+        $payment = $this->createMock('Mage_Sales_Model_Quote_Payment');
         $this->quote
             ->expects($this->once())
             ->method('getPayment')
             ->will($this->returnValue($payment));
 
-        $orderPayment = $this->getMock('Mage_Sales_Model_Order_Payment');
+        $orderPayment = $this->createMock('Mage_Sales_Model_Order_Payment');
         $this->convertQuote
             ->expects($this->once())
             ->method('paymentToOrderPayment')
@@ -497,7 +488,7 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
                 ],
             ],
             'shipping_amount' => 30,
-            'gw_price'        => 20,
+            'gw_price' => 20,
             'discount_amount' => 20,
         ];
 
@@ -505,15 +496,27 @@ class OrderWriterTest extends \PHPUnit_Framework_TestCase
             ->expects($this->once())
             ->method('addData')
             ->with([
-                'discount_amount'       => 6,
-                'base_discount_amount'  => 6,
-                'tax_amount'            => 20,
-                'base_tax_amount'       => 20,
-                'gw_price'              => 8,
-                'base_gw_price'         => 8,
-                'tax_percent'           => 20,
+                'discount_amount' => 6,
+                'base_discount_amount' => 6,
+                'tax_amount' => 20,
+                'base_tax_amount' => 20,
+                'gw_price' => 8,
+                'base_gw_price' => 8,
+                'tax_percent' => 20,
             ]);
 
         $this->writer->quoteToOrder($this->quote, $orderData);
+    }
+
+    protected function getMockModel($class, $disableClone = false)
+    {
+        $mockBuilder = $this->getMockBuilder($class)
+            ->disableOriginalConstructor();
+
+        if ($disableClone) {
+            $mockBuilder->disableOriginalClone();
+        }
+
+        return $mockBuilder->getMock();
     }
 }

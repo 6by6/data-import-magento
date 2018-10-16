@@ -2,22 +2,25 @@
 
 namespace SixBySix\PortTest\Writer;
 
+use PHPUnit\Framework\TestCase;
 use SixBySix\Port\Writer\CsvWriter;
-use PHPUnit_Framework_TestCase;
 
 /**
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class CsvWriterTest extends PHPUnit_Framework_TestCase
+final class CsvWriterTest extends TestCase
 {
     private $tempFile;
 
-    public function setUp()
+    protected function setUp()
     {
         $this->tempFile = sprintf('%s/%s.csv', sys_get_temp_dir(), uniqid($this->getName(), true));
     }
 
-    public function tearDown()
+    protected function tearDown()
     {
         unlink($this->tempFile);
     }
@@ -28,7 +31,7 @@ class CsvWriterTest extends PHPUnit_Framework_TestCase
         $writer->writeItem(['one', 'two', '', 'four']);
         $writer->finish();
 
-        $this->assertEquals("\"one\",\"two\",\"\",\"four\"\n", file_get_contents($this->tempFile));
+        $this->assertSame("\"one\",\"two\",\"\",\"four\"\n", file_get_contents($this->tempFile));
     }
 
     public function testEmptyFieldsAreNotWrappedInEnclosureByDefault()
@@ -37,6 +40,6 @@ class CsvWriterTest extends PHPUnit_Framework_TestCase
         $writer->writeItem(['one', 'two', '', 'four']);
         $writer->finish();
 
-        $this->assertEquals("\"one\",\"two\",,\"four\"\n", file_get_contents($this->tempFile));
+        $this->assertSame("\"one\",\"two\",,\"four\"\n", file_get_contents($this->tempFile));
     }
 }

@@ -1,26 +1,25 @@
 <?php
 
-namespace Jh\DataImportTest\Reader;
-
-use SixBySix\Port\Reader\MagentoReader;
+namespace SixBySix\Port\Reader;
 
 /**
- * Class MagentoReaderTest
- * @package Jh\DataImportTest\ValueConverter
  * @author Aydin Hassan <aydin@hotmail.co.uk>
+ *
+ * @internal
+ * @coversNothing
  */
-class MagentoReaderTest extends \PHPUnit_Framework_TestCase
+final class MagentoTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var MagentoReader
+     * @var Magento
      */
-    protected $reader = null;
+    protected $reader;
 
-    protected $collection = null;
+    protected $collection;
 
-    protected $select = null;
+    protected $select;
 
-    public function setUp()
+    protected function setUp()
     {
         $this->collection = $this
             ->getMockBuilder('\Mage_Core_Model_Resource_Db_Collection_Abstract')
@@ -40,37 +39,36 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $statement = $this->getMock('\Zend_Db_Statement_Interface');
+        $statement = $this->createMock('\Zend_Db_Statement_Interface');
         $this->select
             ->expects($this->once())
             ->method('query')
             ->will($this->returnValue($statement));
 
-        $this->reader = new MagentoReader($this->collection);
+        $this->reader = new Magento($this->collection);
 
         $statement->expects($this->once())
             ->method('fetch')
-            ->will($this->returnValue(array('one' => 1, 'two' => 2, 'three' => 3)));
+            ->will($this->returnValue(['one' => 1, 'two' => 2, 'three' => 3]));
 
-        $this->assertEquals(array('one', 'two', 'three'), $this->reader->getFields());
+        $this->assertSame(['one', 'two', 'three'], $this->reader->getFields());
     }
 
     public function testGetCountReturnsCollectionSize()
     {
-
         $this->collection
             ->expects($this->once())
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $this->reader = new MagentoReader($this->collection);
+        $this->reader = new Magento($this->collection);
 
         $this->collection
             ->expects($this->once())
             ->method('getSize')
             ->will($this->returnValue(5));
 
-        $this->assertEquals(5, $this->reader->count());
+        $this->assertSame(5, $this->reader->count());
     }
 
     public function testRewindGetsNewQueryAndIndexIsReset()
@@ -80,8 +78,8 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $statement1 = $this->getMock('\Zend_Db_Statement_Interface');
-        $statement2 = $this->getMock('\Zend_Db_Statement_Interface');
+        $statement1 = $this->createMock('\Zend_Db_Statement_Interface');
+        $statement2 = $this->createMock('\Zend_Db_Statement_Interface');
         $this->select
             ->expects($this->at(0))
             ->method('query')
@@ -92,7 +90,7 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('query')
             ->will($this->returnValue($statement2));
 
-        $this->reader = new MagentoReader($this->collection);
+        $this->reader = new Magento($this->collection);
 
         $statement1
             ->expects($this->exactly(2))
@@ -103,11 +101,11 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('fetch');
 
         $this->reader->rewind();
-        $this->assertEquals(1, $this->reader->key());
+        $this->assertSame(1, $this->reader->key());
         $this->reader->next();
-        $this->assertEquals(2, $this->reader->key());
+        $this->assertSame(2, $this->reader->key());
         $this->reader->rewind();
-        $this->assertEquals(1, $this->reader->key());
+        $this->assertSame(1, $this->reader->key());
     }
 
     public function testIterator()
@@ -117,18 +115,18 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $this->reader = new MagentoReader($this->collection);
-        $statement = $this->getMock('\Zend_Db_Statement_Interface');
+        $this->reader = new Magento($this->collection);
+        $statement = $this->createMock('\Zend_Db_Statement_Interface');
         $this->select
             ->expects($this->once())
             ->method('query')
             ->will($this->returnValue($statement));
 
-        $data = array(
-            array('one' => 1, 'two' => 2, 'three' => 3),
-            array('one' => 11, 'two' => 22, 'three' => 33),
-            array('one' => 111, 'two' => 222, 'three' => 333),
-        );
+        $data = [
+            ['one' => 1, 'two' => 2, 'three' => 3],
+            ['one' => 11, 'two' => 22, 'three' => 33],
+            ['one' => 111, 'two' => 222, 'three' => 333],
+        ];
 
         $statement->expects($this->at(0))
             ->method('fetch')
@@ -144,9 +142,9 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
 
         $i = 1;
         foreach ($this->reader as $key => $row) {
-            $this->assertEquals($i, $key);
-            $this->assertEquals($data[$i - 1], $row);
-            $i++;
+            $this->assertSame($i, $key);
+            $this->assertSame($data[$i - 1], $row);
+            ++$i;
         }
     }
 
@@ -157,18 +155,18 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
             ->method('getSelect')
             ->will($this->returnValue($this->select));
 
-        $this->reader = new MagentoReader($this->collection);
-        $statement = $this->getMock('\Zend_Db_Statement_Interface');
+        $this->reader = new Magento($this->collection);
+        $statement = $this->createMock('\Zend_Db_Statement_Interface');
         $this->select
             ->expects($this->once())
             ->method('query')
             ->will($this->returnValue($statement));
 
-        $data = array(
-            array('one' => 1, 'two' => 2, 'three' => 3),
-            array('one' => 11, 'two' => 22, 'three' => 33),
-            array('one' => 111, 'two' => 222, 'three' => 333),
-        );
+        $data = [
+            ['one' => 1, 'two' => 2, 'three' => 3],
+            ['one' => 11, 'two' => 22, 'three' => 33],
+            ['one' => 111, 'two' => 222, 'three' => 333],
+        ];
 
         $statement->expects($this->at(0))
             ->method('fetch')
@@ -184,9 +182,9 @@ class MagentoReaderTest extends \PHPUnit_Framework_TestCase
 
         $i = 1;
         foreach ($this->reader as $key => $row) {
-            $this->assertEquals($i, $key);
-            $this->assertEquals($data[$i - 1], $row);
-            $i++;
+            $this->assertSame($i, $key);
+            $this->assertSame($data[$i - 1], $row);
+            ++$i;
         }
     }
 }

@@ -2,17 +2,16 @@
 
 namespace SixBySix\Port\ValueConverter;
 
-use Ddeboer\DataImport\Exception\UnexpectedTypeException;
-use Ddeboer\DataImport\ValueConverter\ValueConverterInterface;
+use Port\Exception\UnexpectedTypeException;
 
 /**
- * Class TrimValueConverter
- * @package SixBySix\Port\ValueConverter
+ * Class Trim.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Aydin Hassan <aydin@hotmail.co.uk>
  */
-class TrimValueConverter implements ValueConverterInterface
+class Trim
 {
-
     /**
      * @var string
      */
@@ -28,12 +27,14 @@ class TrimValueConverter implements ValueConverterInterface
 
     /**
      * @param string $input
-     * @return string
+     *
      * @throws UnexpectedTypeException
+     *
+     * @return string
      */
     public function convert($input)
     {
-        if (!is_string($input)) {
+        if (!\is_string($input)) {
             throw new UnexpectedTypeException($input, 'string');
         }
 

@@ -1,16 +1,18 @@
 <?php
+
 namespace SixBySix\Port\Writer\Product;
 
-use Ddeboer\DataImport\Exception\WriterException;
 use Ddeboer\DataImport\Writer\AbstractWriter;
+use Port\Exception\WriterException;
 use SixBySix\Port\Exception\MagentoSaveException;
 
 /**
- * Class ProductUpdateAttributeWriter
+ * Class ProductUpdateAttribute.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author Adam Paterson <hello@adampaterson.co.uk>
- * @package SixBySix\Port\Writer\Product
  */
-class ProductUpdateAttributeWriter extends AbstractWriter
+class ProductUpdateAttribute extends AbstractWriter
 {
     /**
      * @var \Mage_Catalog_Model_Product
@@ -26,16 +28,17 @@ class ProductUpdateAttributeWriter extends AbstractWriter
     }
 
     /**
-     * Write item if product exists
+     * Write item if product exists.
      *
      * @param array $item
+     *
      * @throws \SixBySix\Port\Exception\MagentoSaveException
      */
     public function writeItem(array $item)
     {
         $productModel = clone $this->productModel;
-        $sku          = $item['sku'];
-        $product      = $productModel->loadByAttribute('sku', $sku);
+        $sku = $item['sku'];
+        $product = $productModel->loadByAttribute('sku', $sku);
 
         if (!$product) {
             throw new WriterException(sprintf('Product with SKU: %s does not exist in Magento', $sku));
@@ -47,6 +50,7 @@ class ProductUpdateAttributeWriter extends AbstractWriter
             $product->save();
         } catch (\Mage_Core_Exception $e) {
             $message = $e->getMessage();
+
             throw new MagentoSaveException($message);
         }
     }

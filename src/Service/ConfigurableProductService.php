@@ -3,18 +3,18 @@
 namespace SixBySix\Port\Service;
 
 use Exception;
-use SixBySix\Port\Exception\MagentoSaveException;
 use Mage_Catalog_Model_Product;
 use Mage_Eav_Model_Entity_Attribute;
+use SixBySix\Port\Exception\MagentoSaveException;
 
 /**
- * Class ConfigurableProductService
- * @package SixBySix\Port\Service
+ * Class ConfigurableProductService.
+ *
+ * @author Six By Six <hello@sixbysix.co.uk>
  * @author  Aydin Hassan <aydin@hotmail.co.uk>
  */
 class ConfigurableProductService
 {
-
     /**
      * @var Mage_Eav_Model_Entity_Attribute
      */
@@ -27,7 +27,7 @@ class ConfigurableProductService
 
     /**
      * @param Mage_Eav_Model_Entity_Attribute $eavAttrModel
-     * @param Mage_Catalog_Model_Product       $product
+     * @param Mage_Catalog_Model_Product      $product
      */
     public function __construct(Mage_Eav_Model_Entity_Attribute $eavAttrModel, Mage_Catalog_Model_Product $product)
     {
@@ -42,17 +42,17 @@ class ConfigurableProductService
      * @throws MagentoSaveException
      */
     public function assignSimpleProductToConfigurable(
-        \Mage_Catalog_Model_Product $product,
+        Mage_Catalog_Model_Product $product,
         $parentSku
     ) {
-        $configProduct  = $this->productModel
+        $configProduct = $this->productModel
             ->loadByAttribute('sku', $parentSku);
 
         if (false === $configProduct) {
             throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" does not exist', $parentSku));
         }
 
-        if ($configProduct->getData('type_id') !== 'configurable') {
+        if ('configurable' !== $configProduct->getData('type_id')) {
             throw new MagentoSaveException(sprintf('Parent product with SKU: "%s" is not configurable', $parentSku));
         }
 
@@ -61,11 +61,11 @@ class ConfigurableProductService
 
         $configData = [];
         foreach ($attributes as $attribute) {
-            $attributeCode    = $attribute['attribute_code'];
-            $configData[]     = [
-                'attribute_id'  => $this->eavAttrModel->getIdByCode('catalog_product', $attributeCode),
-                'label'         => $product->getAttributeText($attributeCode),
-                'value_index'   => $product->getData($attributeCode),
+            $attributeCode = $attribute['attribute_code'];
+            $configData[] = [
+                'attribute_id' => $this->eavAttrModel->getIdByCode('catalog_product', $attributeCode),
+                'label' => $product->getAttributeText($attributeCode),
+                'value_index' => $product->getData($attributeCode),
                 'pricing_value' => $product->getPrice(),
             ];
         }
@@ -92,7 +92,7 @@ class ConfigurableProductService
      *
      * @throws MagentoSaveException
      */
-    public function setupConfigurableProduct(\Mage_Catalog_Model_Product $product, array $configurableAttributes)
+    public function setupConfigurableProduct(Mage_Catalog_Model_Product $product, array $configurableAttributes)
     {
         $productTypeInstance = $product->getTypeInstance();
         $attributeIds = [];
@@ -112,7 +112,7 @@ class ConfigurableProductService
             }
 
             if (!$productTypeInstance->getAttributeById($attributeId)) {
-                $msg  = 'Cannot create configurable product with SKU: "%s". Attribute: "%s" is not assigned ';
+                $msg = 'Cannot create configurable product with SKU: "%s". Attribute: "%s" is not assigned ';
                 $msg .= 'to the attribute set: "%s"';
 
                 throw new MagentoSaveException(
@@ -129,7 +129,7 @@ class ConfigurableProductService
 
         $product->addData([
             'can_save_configurable_attributes' => true,
-            'configurable_attributes_data'     => $configurableAttributesData,
+            'configurable_attributes_data' => $configurableAttributesData,
         ]);
     }
 }
