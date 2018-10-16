@@ -2,6 +2,8 @@
 
 namespace SixBySix\PortTest\Writer;
 
+use Mockery as m;
+use SixBySix\Port\Exception\MagentoSaveException;
 use SixBySix\Port\Writer\CustomerWriter;
 
 /**
@@ -19,7 +21,11 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp()
     {
-        $this->customerModel = $this->createMock('\Mage_Customer_Model_Customer');
+        $this->customerModel = m::mock('\Mage_Customer_Model_Customer')
+            ->shouldIgnoreMissing()
+            ->shouldAllowMockingProtectedMethods()
+            ->makePartial();
+
         $this->customerWriter = new CustomerWriter($this->customerModel);
     }
 
@@ -31,25 +37,29 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('setData')
-            ->with($data);
+            ->shouldReceive('setData')
+            ->with($data)
+            ->andReturn($this->customerModel);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('setId')
+            ->andReturn($this->customerModel);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getPrimaryAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('save')
+            ->andReturn($this->customerModel);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getAdditionalAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('getPrimaryAddresses')
+            ->andReturn([]);
 
-        $this->customerWriter->writeItem($data);
+        $this->customerModel
+            ->shouldReceive('getAdditionalAddresses')
+            ->andReturn([]);
+
+        $customerWriter = $this->customerWriter->writeItem($data);
+
+        $this->assertInstanceOf(CustomerWriter::class, $customerWriter);
     }
 
     public function testCustomerIsSavedWithAddressWhichHasRegionId()
@@ -71,67 +81,59 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
             ],
         ];
 
-        $name = $data['firstname'].' '.$data['lastname'];
-
-        $customerData = [
-            'firstname' => 'Aydin',
-            'lastname' => 'Hassan',
-        ];
+        $this->customerModel
+            ->shouldReceive('getPrimaryAddresses', 'getDefaultBilling', 'getDefaultShipping', 'getAdditionalAddresses')
+            ->once()
+            ->andReturn([]);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('setData')
-            ->with($customerData);
+            ->shouldReceive('getIdFieldName')
+            ->andReturn('entity_id');
 
-        $addressModel = $this->createMock('\Mage_Customer_Model_Address');
-
-        $directoryResourceModel = $this->getMockBuilder('\Mage_Directory_Model_Resource_Region_Collection')
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $args = [$this->customerModel, $addressModel, $directoryResourceModel];
-        $methods = ['lookUpRegion', 'processRegions'];
-        $this->customerWriter = $this->getMock('SixBySix\Port\Writer\CustomerWriter', $methods, $args);
-
-        /*$this->customerWriter
-             ->expects($this->once())
-             ->method('processRegions')
-             ->with($directoryResourceModel)
-             ->will($this->returnValue(array()));*/
-
-        $this->customerWriter
-            ->expects($this->once())
-            ->method('lookUpRegion')
-            ->with($addressData['region'], $addressData['country_id'], $name)
-            ->will($this->returnValue(1));
-
-        unset($addressData['region']);
-        $addressData['region_id'] = 1;
+        $addressModel = m::mock('\Mage_Customer_Model_Address')->makePartial();
         $addressModel
-            ->expects($this->once())
-            ->method('setData')
-            ->with($addressData);
+            ->shouldReceive('getIdFieldName')
+            ->andReturn('entity_id');
+
+        $addressModel
+            ->shouldReceive('save')
+            ->andReturn($addressModel);
+
+        $addressModel->shouldReceive('setIsDefaultShipping', 'setIsDefaultBilling');
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('addAddress')
-            ->with($addressModel);
+            ->shouldReceive('addAddress')
+            ->with($addressModel)
+            ->andReturnSelf();
+
+        $addressCollection = m::mock(Mage_Customer_Model_Entity_Address_Collection::class)->makePartial();
+        $addressCollection->shouldReceive('addItem')->andReturnSelf();
+        $addressCollection->shouldReceive('getItems')->andReturn([]);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('getAddressesCollection')
+            ->andReturn($addressCollection);
+
+        $directoryResourceModel = m::mock('\Mage_Directory_Model_Resource_Region_Collection');
+        $directoryResourceModel->shouldReceive('getIterator')
+            ->andReturn(new \ArrayIterator([]));
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getPrimaryAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('save')
+            ->andReturn($this->customerModel);
+
+        $resource = m::mock(\Mage_Customer_Model_Resource_Customer::class)
+            ->shouldIgnoreMissing()
+            ->andReturnSelf();
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getAdditionalAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('_getResource')
+            ->andReturn($resource);
 
-        $this->customerWriter->writeItem($data);
+        $this->customerWriter = new CustomerWriter($this->customerModel, $addressModel, $directoryResourceModel);
+        $writer = $this->customerWriter->writeItem($data);
+
+        $this->assertInstanceOf(CustomerWriter::class, $writer);
     }
 
     public function testCustomerIsSavedWithAddressWhichHasNoRegionId()
@@ -153,65 +155,97 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
             ],
         ];
 
-        $name = $data['firstname'].' '.$data['lastname'];
-
         $customerData = [
             'firstname' => 'Aydin',
             'lastname' => 'Hassan',
         ];
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('setData')
-            ->with($customerData);
+            ->shouldReceive('setData')
+            ->once()
+            ->with($customerData)
+            ->andReturn($this->customerModel);
 
-        $addressModel = $this->createMock('\Mage_Customer_Model_Address');
+        $region = m::mock(\Mage_Directory_Model_Region::class);
+        $region
+            ->shouldReceive('getData')
+            ->with('country_id')
+            ->andReturn('UK');
 
-        $directoryResourceModel = $this->getMockBuilder('\Mage_Directory_Model_Resource_Region_Collection')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $region
+            ->shouldReceive('getData')
+            ->with('name')
+            ->andReturn('Nottinghamshire');
 
-        $args = [$this->customerModel, $addressModel, $directoryResourceModel];
-        $methods = ['lookUpRegion', 'processRegions'];
-        $this->customerWriter = $this->getMock('SixBySix\Port\Writer\CustomerWriter', $methods, $args);
+        $region
+            ->shouldReceive('getId')
+            ->andReturn(23);
 
-        /*$this->customerWriter
-             ->expects($this->once())
-             ->method('processRegions')
-             ->with($directoryResourceModel)
-             ->will($this->returnValue(array()));*/
+        $addressModel = m::mock('\Mage_Customer_Model_Address')->makePartial();
+        $addressModel->shouldReceive('setIsDefaultShipping', 'setIsDefaultBilling')
+            ->with(true)
+            ->andReturnSelf();
 
-        $this->customerWriter
-            ->expects($this->once())
-            ->method('lookUpRegion')
-            ->with($addressData['region'], $addressData['country_id'], $name)
-            ->will($this->returnValue(false));
+        $directoryResourceModel = m::mock('\Mage_Directory_Model_Resource_Region_Collection');
+        $directoryResourceModel->shouldReceive('getIterator')
+            ->andReturn(new \ArrayIterator([$region]));
+
+        $this->customerWriter = new CustomerWriter(
+            $this->customerModel,
+            $addressModel,
+            $directoryResourceModel
+        );
 
         $addressModel
-            ->expects($this->once())
-            ->method('setData')
+            ->shouldReceive('setData')
+            ->once()
             ->with($addressData);
 
-        $this->customerModel
-            ->expects($this->once())
-            ->method('addAddress')
-            ->with($addressModel);
+        $addressModel
+            ->shouldReceive('setId')
+            ->once()
+            ->andReturnSelf();
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('addAddress')
+            ->with($addressModel)
+            ->andReturnSelf();
+
+        $addressCollection = m::mock(Mage_Customer_Model_Entity_Address_Collection::class)->makePartial();
+        $addressCollection->shouldReceive('addItem')->andReturnSelf();
+        $addressCollection->shouldReceive('getItems')->andReturn([]);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getPrimaryAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('getAddressesCollection')
+            ->andReturn($addressCollection);
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getAdditionalAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
-        $this->customerWriter->writeItem($data);
+        $this->customerModel
+            ->shouldReceive('getIdFieldName')
+            ->andReturn('entity_id');
+
+        $this->customerModel
+            ->shouldReceive('setId')
+            ->with(1)
+            ->andReturnSelf();
+
+        $this->customerModel
+            ->shouldReceive('getPrimaryAddresses')
+            ->once()
+            ->andReturn([]);
+
+        $this->customerModel
+            ->shouldReceive('getAdditionalAddresses')
+            ->once()
+            ->andReturn([]);
+
+        $writer = $this->customerWriter->writeItem($data);
+
+        $this->assertInstanceOf(CustomerWriter::class, $writer);
     }
 
     public function testRegions()
@@ -307,6 +341,8 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
 
     public function testMagentoSaveExceptionIsThrownIfSaveFails()
     {
+        $this->expectException(\SixBySix\Port\Exception\MagentoSaveException::class);
+
         $data = [
             'firstname' => 'Aydin',
             'lastname' => 'Hassan',
@@ -314,28 +350,28 @@ final class CustomerWriterTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('setData')
+            ->shouldReceive('setData')
+            ->once()
             ->with($data);
 
-        $e = new \Mage_Customer_Exception('Save Failed');
         $this->customerModel
-            ->expects($this->once())
-            ->method('save')
-            ->will($this->throwException($e));
+            ->shouldReceive('getIdFieldName')
+            ->andReturn('entity_id');
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getPrimaryAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('save')
+            ->andThrow(new MagentoSaveException());
 
         $this->customerModel
-            ->expects($this->once())
-            ->method('getAdditionalAddresses')
-            ->will($this->returnValue([]));
+            ->shouldReceive('getPrimaryAddresses')
+            ->once()
+            ->andReturn([]);
 
-        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
-        $this->expectExceptionMessage('Save Failed');
+        $this->customerModel
+            ->shouldReceive('getAdditionalAddresses')
+            ->once()
+            ->andReturn([]);
+
         $this->customerWriter->writeItem($data);
     }
 

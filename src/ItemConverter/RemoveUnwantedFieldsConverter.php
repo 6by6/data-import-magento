@@ -44,6 +44,11 @@ class RemoveUnwantedFieldsConverter
         $this->fieldsToKeep = $fieldsToKeep;
     }
 
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     /**
      * Remove unwanted fields according to mapping -
      * Also populates required values with a default value

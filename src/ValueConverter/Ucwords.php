@@ -12,6 +12,11 @@ use Port\Exception\UnexpectedTypeException;
  */
 class Ucwords
 {
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     /**
      * @param string $input
      *

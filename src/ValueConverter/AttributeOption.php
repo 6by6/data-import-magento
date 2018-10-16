@@ -45,6 +45,16 @@ class AttributeOption
     }
 
     /**
+     * @param $input
+     *
+     * @return mixed
+     */
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
+    /**
      * @param mixed $input
      *
      * @throws UnexpectedValueException

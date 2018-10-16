@@ -17,6 +17,6 @@ final class ShipmentWriterFactoryTest extends \PHPUnit\Framework\TestCase
     public function testFactoryReturnsInstance()
     {
         $factory = new ShipmentWriterFactory();
-        $this->assertInstanceOf('\SixBySix\Port\Writer\Shipment', $factory->__invoke());
+        $this->assertInstanceOf('\SixBySix\Port\Writer\Shipment', $factory());
     }
 }

@@ -30,6 +30,11 @@ class ProductVisibility
         $this->productVisibilities = \Mage_Catalog_Model_Product_Visibility::getOptionArray();
     }
 
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     /**
      * @param string $input
      *

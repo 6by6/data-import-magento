@@ -18,13 +18,16 @@ final class XmlTest extends \PHPUnit\Framework\TestCase
     {
         $file = fopen(__DIR__.'/../Fixtures/valid_xml.xml', 'rb');
         $this->reader = new Xml($file);
+
+        $this->assertInstanceOf(Xml::class, $this->reader);
     }
 
+    /**
+     * @expectedException \Port\Exception\ReaderException
+     * @expectedExceptionMessage XML Parsing Failed. Errors: 'Premature end of data in tag orderStatus line 2'
+     */
     public function testInvalidXmlThrowsException()
     {
-        $this->expectException(\Port\Exception\ReaderException::class);
-        $this->expectExceptionMessage('XML Parsing Failed. Errors: \'Premature end of data in tag orderStatus line 2\'');
-
         $file = fopen(__DIR__.'/../Fixtures/invalid_xml.xml', 'r+b');
 
         $this->reader = new Xml($file);

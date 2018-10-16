@@ -25,6 +25,11 @@ class Trim
         $this->charMask = $charMask;
     }
 
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     /**
      * @param string $input
      *

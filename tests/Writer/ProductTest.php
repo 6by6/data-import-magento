@@ -2,8 +2,12 @@
 
 namespace SixBySix\PortTest\Writer;
 
+use Mockery as m;
 use Psr\Log\LoggerInterface;
 use SixBySix\Port\Exception\MagentoSaveException;
+use SixBySix\Port\Service\AttributeService;
+use SixBySix\Port\Service\ConfigurableProductService;
+use SixBySix\Port\Service\RemoteImageImporter;
 use SixBySix\Port\Writer\Product;
 
 /**
@@ -21,6 +25,7 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
      */
     protected $productWriter;
     protected $productModel;
+    protected $eavAttributeModel;
     protected $attributeService;
     protected $remoteImageImporter;
     protected $configurableProductService;
@@ -32,18 +37,21 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp()
     {
-        $this->productModel = $this->getMock('\Mage_Catalog_Model_Product', [], [], '', false);
-        $this->remoteImageImporter = $this->createMock('\SixBySix\Port\Service\RemoteImageImporter');
-        $this->logger = $this->createMock('\Psr\Log\LoggerInterface');
+        $this->productModel = m::mock(\Mage_Catalog_Model_Product::class)
+            ->shouldIgnoreMissing()
+            ->makePartial();
 
-        $this->attributeService = $this->getMockBuilder('SixBySix\Port\Service\AttributeService')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $this->remoteImageImporter = m::mock(RemoteImageImporter::class)->makePartial();
+        $this->logger = m::mock(LoggerInterface::class);
+        $this->attributeService = m::mock(AttributeService::class);
 
-        $this->configurableProductService =
-            $this->getMockBuilder('\SixBySix\Port\Service\ConfigurableProductService')
-                ->disableOriginalConstructor()
-                ->getMock();
+        $this->eavAttributeModel = m::mock(\Mage_Eav_Model_Entity_Attribute::class)->makePartial();
+        $this->configurableProductService = m::mock(ConfigurableProductService::class, [
+            $this->eavAttributeModel,
+            $this->productModel,
+        ])
+            ->shouldIgnoreMissing()
+            ->makePartial();
 
         $this->productWriter = new Product(
             $this->productModel,
@@ -57,11 +65,13 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
     public function testPrepareMethodSetsUpDataCorrectly()
     {
         $this->productModel
-            ->expects($this->once())
-            ->method('getDefaultAttributeSetId')
-            ->will($this->returnValue(1));
+            ->shouldReceive('getDefaultAttributeSetId')
+            ->once()
+            ->andReturn(1);
 
         $this->productWriter->prepare();
+
+        $this->assertInstanceOf(Product::class, $this->productWriter);
     }
 
     public function testWriteItemSuccessfullySaves()
@@ -83,15 +93,18 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         $expected = $data;
         unset($expected['attributes']);
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($expected);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(\Mage_Catalog_Model_Product::class, $this->productModel);
     }
 
     public function testWriteWithAttributesDelegatesToAttributeService()
@@ -114,39 +127,35 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->at(0))
-            ->method('setData')
-            ->with('code1', 'option1');
-
-        $this->productModel
-            ->expects($this->at(1))
-            ->method('setData')
-            ->with('code2', 'option2');
+            ->shouldReceive('setData')
+            ->with(['code1' => 'option1', 'code2' => 'option2']);
 
         $expected = $data;
         unset($expected['attributes']);
+
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($expected);
 
         $this->attributeService
-            ->expects($this->at(0))
-            ->method('getAttrCodeCreateIfNotExist')
+            ->shouldReceive('getAttrCodeCreateIfNotExist')
             ->with('catalog_product', 'code1', 'option1')
-            ->will($this->returnValue('option1'));
+            ->andReturn('option1');
 
         $this->attributeService
-            ->expects($this->at(1))
-            ->method('getAttrCodeCreateIfNotExist')
+            ->shouldReceive('getAttrCodeCreateIfNotExist')
             ->with('catalog_product', 'code2', 'option2')
-            ->will($this->returnValue('option2'));
+            ->andReturn('option2');
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(\Mage_Catalog_Model_Product::class, $this->productModel);
     }
 
     public function testWriteItemWithNullAttributesAreSkipped()
@@ -170,21 +179,28 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         $expected = $data;
         unset($expected['attributes']);
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($expected);
 
         $this->attributeService
-            ->expects($this->never())
-            ->method('getAttrCodeCreateIfNotExist');
+            ->shouldNotReceive('getAttrCodeCreateIfNotExist');
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(\Mage_Catalog_Model_Product::class, $this->productModel);
     }
 
+    /**
+     * @expectedException \SixBySix\Port\Exception\MagentoSaveException
+     * @expectedExceptionMessage Configurable product with SKU: "PROD1" must have at least one "configurable_attribute"
+     * defined
+     */
     public function testCreateConfigurableProductThrowsExceptionIfNoAttributesSpecified()
     {
         $data = [
@@ -203,16 +219,9 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
-
-        $this->expectException(
-            '\SixBySix\Port\Exception\MagentoSaveException'
-        );
-        $this->expectExceptionMessage(
-            'Configurable product with SKU: "PROD1" must have at least one "configurable_attribute" defined'
-        );
 
         $this->productWriter->writeItem($data);
     }
@@ -235,20 +244,36 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
+
+        $this->productModel
+            ->shouldReceive('getTypeInstance')
+            ->andReturnSelf();
+
+        $this->eavAttributeModel
+            ->shouldReceive('getIdByCode')
+            ->with('catalog_product', 'Colour')
+            ->andReturn(4);
+
+        $this->productModel
+            ->shouldReceive('getAttributeById')
+            ->with(4)
+            ->andReturn(true);
 
         $this->configurableProductService
-            ->expects($this->once())
-            ->method('setupConfigurableProduct')
+            ->shouldReceive('setupConfigurableProduct')
             ->with($this->productModel, ['Colour']);
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(Product::class, $this->productWriter);
     }
 
     public function testSimpleProductWithEmptyParentIsNotConfigured()
@@ -269,19 +294,21 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->configurableProductService
-            ->expects($this->never())
-            ->method('assignSimpleProductToConfigurable');
+            ->shouldNotReceive('assignSimpleProductToConfigurable');
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(Product::class, $this->productWriter);
     }
 
     public function testSimpleProductWithParentIsConfigured()
@@ -302,24 +329,54 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
+
+        $this->productModel
+            ->shouldReceive('loadByAttribute')
+            ->with('sku', 'PARENT1')
+            ->andReturnSelf();
+
+        $this->productModel
+            ->shouldReceive('getData')
+            ->once()
+            ->with('type_id')
+            ->andReturn('configurable');
+
+        $this->productModel
+            ->shouldReceive('getTypeInstance')
+            ->once()
+            ->andReturnSelf();
+
+        $this->productModel
+            ->shouldReceive('getConfigurableAttributesAsArray', 'getUsedProductIds')
+            ->once()
+            ->andReturn([]);
+
+        $this->productModel
+            ->shouldReceive('getId')
+            ->andReturn(12);
 
         $this->configurableProductService
-            ->expects($this->once())
-            ->method('assignSimpleProductToConfigurable')
+            ->shouldReceive('assignSimpleProductToConfigurable')
+            ->once()
             ->with($this->productModel, 'PARENT1');
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(\Mage_Catalog_Model_Product::class, $this->productModel);
     }
 
     public function testProductIsRemovedAndExceptionIsThrownIfErrorAssigningSimpleToParent()
     {
+        $this->expectException(\SixBySix\Port\Exception\MagentoSaveException::class);
+
         $data = [
             'name' => 'Product 1',
             'description' => 'Description',
@@ -336,30 +393,22 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->configurableProductService
-            ->expects($this->once())
-            ->method('assignSimpleProductToConfigurable')
-            ->with($this->productModel, 'PARENT1')
-            ->will($this->throwException(new MagentoSaveException('nope')));
+            ->shouldReceive('assignSimpleProductToConfigurable')
+            ->once()
+            ->andThrow(new MagentoSaveException('nope'));
 
         $this->productModel
-            ->expects($this->once())
-            ->method('delete');
-
-        $this->expectException(
-            '\SixBySix\Port\Exception\MagentoSaveException'
-        );
-        $this->expectExceptionMessage(
-            'nope'
-        );
+            ->shouldReceive('delete')
+            ->once();
 
         $this->productWriter->writeItem($data);
     }
@@ -379,35 +428,60 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
             'url_key' => null,
             'sku' => 'PROD1',
             'images' => [
-                'http://image.com/image1.jpg',
-                'http://image.com/image2.jpg',
+                __DIR__.'/../Fixtures/honey.jpg',
+                __DIR__.'/../Fixtures/honey.jpg',
             ],
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->andReturnSelf();
+
+        $this->productModel
+            ->shouldReceive('getSku')
+            ->once()
+            ->andReturn('PROD1');
+
+        $this->productModel
+            ->shouldReceive('addImageToMediaGallery')
+            ->andReturnSelf();
+
+        $resource = m::mock(\Mage_Catalog_Model_Resource_Product::class)
+            ->shouldIgnoreMissing();
+
+        $this->productModel
+            ->shouldReceive('getResource')
+            ->andReturn($resource);
+
+        $resource
+            ->shouldReceive('save')
+            ->with()
+            ->andReturnSelf();
 
         $this->remoteImageImporter
-            ->expects($this->at(0))
-            ->method('importImage')
-            ->with($this->productModel, 'http://image.com/image1.jpg');
+            ->shouldReceive('importImage')
+            ->with($this->productModel, 'http://image.com/image1.jpg')
+            ->andReturn($this->productModel);
 
         $this->remoteImageImporter
-            ->expects($this->at(1))
-            ->method('importImage')
-            ->with($this->productModel, 'http://image.com/image2.jpg');
+            ->shouldReceive('importImage')
+            ->with($this->productModel, 'http://image.com/image2.jpg')
+            ->andReturn($this->productModel);
 
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(Product::class, $this->productWriter);
     }
 
     public function testExceptionIsThrownIfImageCouldNotBeImported()
     {
+        $this->expectException(\SixBySix\Port\Exception\MagentoSaveException::class);
+
         $data = [
             'name' => 'Product 1',
             'description' => 'Description',
@@ -424,36 +498,54 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
+            ->once()
             ->with($data);
 
         $this->productModel
-            ->expects($this->once())
-            ->method('save');
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
 
         $this->remoteImageImporter
-            ->expects($this->once())
-            ->method('importImage')
+            ->shouldReceive('importImage')
+            ->once()
             ->with($this->productModel, 'http://image.com/image1.jpg')
-            ->will($this->throwException(new \RuntimeException('nope!')));
+            ->andThrow(new MagentoSaveException());
 
         $this->productModel
-            ->expects($this->once())
-            ->method('delete');
+            ->shouldReceive('getSku')
+            ->once()
+            ->andReturn('PROD1');
 
-        $this->expectException(
-            '\SixBySix\Port\Exception\MagentoSaveException'
-        );
-        $this->expectExceptionMessage(
-            'Error importing image for product with SKU: "PROD1". Error: "nope!"'
-        );
+        $this->productModel
+            ->shouldReceive('addImageToMediaGallery')
+            ->andReturnSelf();
+
+        $resource = m::mock(\Mage_Catalog_Model_Resource_Product::class)->makePartial();
+
+        $this->productModel
+            ->shouldReceive('getResource')
+            ->once()
+            ->andReturn($resource);
+
+        $resource->shouldReceive('save')
+            ->once()
+            ->with($this->productModel)
+            ->andThrow(new \RuntimeException());
+
+        $this->productModel
+            ->shouldReceive('delete')
+            ->once()
+            ->andReturnSelf();
 
         $this->productWriter->writeItem($data);
     }
 
     public function testMagentoSaveExceptionIsThrownIfSaveFails()
     {
+        $this->expectException(\SixBySix\Port\Exception\MagentoSaveException::class);
+
         $data = [
             'name' => 'Product 1',
             'description' => 'Description',
@@ -468,18 +560,14 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
             ->with($data);
 
-        $e = new \Mage_Customer_Exception('Save Failed');
         $this->productModel
-            ->expects($this->once())
-            ->method('save')
-            ->will($this->throwException($e));
+            ->shouldReceive('save')
+            ->once()
+            ->andThrow(new \Mage_Catalog_Exception('Save failed'));
 
-        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
-        $this->expectExceptionMessage('Save Failed');
         $this->productWriter->writeItem($data);
     }
 
@@ -526,19 +614,21 @@ final class ProductTest extends \PHPUnit\Framework\TestCase
         ];
 
         $this->productModel
-            ->expects($this->once())
-            ->method('addData')
+            ->shouldReceive('addData')
             ->with($expected);
 
-        $e = new \Mage_Customer_Exception('Save Failed');
         $this->productModel
-            ->expects($this->once())
-            ->method('save')
-            ->will($this->throwException($e));
+            ->shouldReceive('getDefaultAttributeSetId')
+            ->andReturn(1);
 
-        $this->expectException('SixBySix\Port\Exception\MagentoSaveException');
-        $this->expectExceptionMessage('Save Failed');
+        $this->productModel
+            ->shouldReceive('save')
+            ->once()
+            ->andReturnSelf();
+
         $this->productWriter->prepare();
         $this->productWriter->writeItem($data);
+
+        $this->assertInstanceOf(Product::class, $this->productWriter);
     }
 }

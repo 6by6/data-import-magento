@@ -51,7 +51,7 @@ class NestedValueConverterWorkflow extends Workflow
     protected function convertItem($item)
     {
         foreach ($this->itemConverters as $converter) {
-            $item = $converter->__invoke($item);
+            $item = $converter($item);
             if ($item && !(\is_array($item) || ($item instanceof \ArrayAccess && $item instanceof \Traversable))) {
                 throw new UnexpectedTypeException($item, 'false or array');
             }
@@ -103,7 +103,7 @@ class NestedValueConverterWorkflow extends Workflow
             if ('*' === $property) {
                 $data = array_map(function ($value) use ($converters) {
                     foreach ($converters as $converter) {
-                        $value = $converter->__invoke($value);
+                        $value = $converter($value);
                     }
 
                     return $value;
@@ -111,7 +111,7 @@ class NestedValueConverterWorkflow extends Workflow
             } elseif (isset($data[$property]) || array_key_exists($property, $data)) {
                 //This is an associative array
                 foreach ($converters as $converter) {
-                    $data[$property] = $converter->__invoke($data[$property]);
+                    $data[$property] = $converter($data[$property]);
                 }
             }
         } else {

@@ -8,21 +8,29 @@ php:
   - 7.2
   - hhvm
 
-install:
-  - composer self-update
-  - composer install --dev --prefer-source
+cache:
+  directories:
+    - $HOME/.composer/cache
 
-before_script:
-  - mkdir -p build/logs
+install:
+  - if [[ "$COMPOSER_FLAGS" == *"--prefer-lowest"* ]]; then travis_retry composer update --prefer-dist --prefer-stable --quiet; fi
+  - travis_retry composer update ${COMPOSER_FLAGS} --prefer-dist
 
 script:
-  - ./vendor/bin/phpunit --coverage-clover ./build/logs/clover.xml
+  - ./vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
   - ./vendor/bin/phpcs --standard=PSR2 ./src/
   - ./vendor/bin/phpcs --standard=PSR2 ./tests/
 
 after_script:
-  - php vendor/bin/coveralls -v
+  - |
+    if [[ "$TRAVIS_PHP_VERSION" != 'hhvm-3.24' && "$TRAVIS_PHP_VERSION" != '7.0' ]]; then
+      wget https://scrutinizer-ci.com/ocular.phar
+      php ocular.phar code-coverage:upload --format=php-clover coverage.clover
+    fi
 
 matrix:
   allow_failures:
     - php: hhvm
+
+notifications:
+  email: false

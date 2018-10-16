@@ -44,6 +44,11 @@ class ItemNesterConverter
         $this->arrayNest = $array;
     }
 
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     public function convert($input)
     {
         if (isset($input[$this->resultKey])) {

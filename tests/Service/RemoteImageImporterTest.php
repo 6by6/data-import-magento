@@ -27,7 +27,7 @@ final class RemoteImageImporterTest extends \PHPUnit\Framework\TestCase
     protected function setup()
     {
         $this->importer = new RemoteImageImporter();
-        $this->product = $this->getMock('\Mage_Catalog_Model_Product', [], [], '', false);
+        $this->product = $this->getMockBuilder('\Mage_Catalog_Model_Product')->getMock([], [], '', false);
     }
 
     public function testImportImage()

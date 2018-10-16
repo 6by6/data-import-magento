@@ -33,7 +33,8 @@
         "phpunit/phpunit": "~4.0 | ^7.0",
         "squizlabs/php_codesniffer": "~2",
         "firegento/magento": "~1.9",
-        "codeception/aspect-mock": "^0.2.0 | ^0.5.3"
+        "codeception/aspect-mock": "^0.2.0 | ^0.5.3",
+        "mockery/mockery": "^1.2"
     },
     "autoload": {
         "psr-4": {

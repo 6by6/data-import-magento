@@ -30,6 +30,11 @@ class ProductStatus
         $this->productStatuses = \Mage_Catalog_Model_Product_Status::getOptionArray();
     }
 
+    public function __invoke($input)
+    {
+        return $this->convert($input);
+    }
+
     /**
      * @param string $input
      *
